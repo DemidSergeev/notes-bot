@@ -1,0 +1,44 @@
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: pgpass
+      POSTGRES_DB: notesdb
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - botnet
+    deploy:
+      resources:
+        limits:
+          cpus: "0.7"
+          memory: 1024M
+    restart: unless-stopped
+
+  bot:
+    build: ./bot
+    depends_on:
+      - db
+    environment:
+      TELEGRAM_TOKEN: "8432508571:AAEsaWaKn53iEyb46yj2A-rLrntQC_F-ZfY"
+      DATABASE_URL: "postgresql+psycopg2://pguser:pgpass@db:5432/notesdb"
+      ADMIN_ID: "6313829262"             # ваш Telegram numeric id
+      PAYMENT_DETAILS: "6666 6666 6666 6666"
+    volumes:
+      - ./bot/check:/app/check
+      - ./bot/data:/app/data
+    networks:
+      - botnet
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 512M
+    restart: unless-stopped
+
+volumes:
+  db_data:
+
+networks:
+  botnet:
