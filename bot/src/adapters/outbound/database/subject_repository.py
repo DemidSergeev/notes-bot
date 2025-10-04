@@ -32,10 +32,15 @@ class SqlModelSubjectRepository(SubjectRepository):
         return Subject(id=db_subject.id, name=db_subject.name, notes=notes)
 
     async def save(self, subject: Subject) -> None:
-        db_subject = DBSubject(id=subject.id, name=subject.name)
-        self.session.add(db_subject)
+        # Save of notes might be broken. Need testing
         for note in subject.notes:
             await self.note_repository.save(note)
+        db_notes = [
+            await self.note_repository.get_by_id(note.id)
+            for note in subject.notes
+        ]
+        db_subject = DBSubject(id=subject.id, name=subject.name, notes=db_notes)
+        self.session.add(db_subject)
         await self.session.commit()
 
     async def delete(self, subject_id: uuid.UUID) -> None:

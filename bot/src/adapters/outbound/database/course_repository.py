@@ -33,11 +33,16 @@ class SqlModelCourseRepository(CourseRepository):
         return Course(id=db_course.id, year=year, subjects=subjects)
 
     async def save(self, course: Course) -> None:
-        db_course = DBCourse(id=course.id, year=course.year.value)
-        self.session.add(db_course)
-        await self.session.commit()
+        # Save of subjects might be broken. Need testing
         for subject in course.subjects:
             await self.subject_repository.save(subject)
+        db_subjects = [
+            await self.subject_repository.get_by_id(subject.id)
+            for subject in course.subjects
+        ]
+        db_course = DBCourse(id=course.id, year=course.year.value, subjects=db_subjects)
+        self.session.add(db_course)
+        await self.session.commit()
 
     async def delete(self, course_id: uuid.UUID) -> None:
         db_course = await self.session.get(DBCourse, course_id)
