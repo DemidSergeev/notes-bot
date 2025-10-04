@@ -1,10 +1,10 @@
-from enum import StrEnum, auto
+from enum import Enum
 
 
-class CourseYear(StrEnum):
-    One = auto()
-    Two = auto()
-    Three = auto()
-    Four = auto()
-    Five = auto()
-    Six = auto()
+class CourseYear(Enum):
+    ONE = 1
+    TWO = 2
+    THREE = 3
+    FOUR = 4
+    FIVE = 5
+    SIX = 6
