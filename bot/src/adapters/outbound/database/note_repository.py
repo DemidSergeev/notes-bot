@@ -1,34 +1,43 @@
 import uuid
 from sqlmodel import Session, select
+from collections.abc import Callable, Generator
 from src.core.application.ports.outbound.database import NoteRepository
 from src.core.domain.models import Note
 from .models import Note as DBNote
 
 
 class SqlModelNoteRepository(NoteRepository):
-    def __init__(self, session: Session):
-        self.session = session
+    def __init__(self, session_factory: Callable[[], Generator[Session, None, None]]):
+        self._session_factory = session_factory
 
-    async def get_by_id(self, note_id: uuid.UUID) -> Note | None:
-        db_note = await self.session.get(DBNote, note_id)
-        if not db_note:
-            return None
-        return Note(id=db_note.id, title=db_note.title)
+    def get_by_id(self, note_id: uuid.UUID) -> Note | None:
+        with self._session_factory() as session:
+            session: Session
+            db_note = session.get(DBNote, note_id)
+            if not db_note:
+                return None
+            return Note(id=db_note.id, title=db_note.title)
 
-    async def get_by_title(self, title: str) -> Note | None:
-        statement = select(DBNote).where(DBNote.title == title)
-        db_note = await self.session.exec(statement).first()
-        if not db_note:
-            return None
-        return Note(id=db_note.id, title=db_note.title)
+    def get_by_title(self, title: str) -> Note | None:
+        with self._session_factory() as session:
+            session: Session
+            statement = select(DBNote).where(DBNote.title == title)
+            db_note = session.exec(statement).first()
+            if not db_note:
+                return None
+            return Note(id=db_note.id, title=db_note.title)
 
-    async def save(self, note: Note) -> None:
-        db_note = DBNote(id=note.id, title=note.title)
-        self.session.add(db_note)
-        await self.session.commit()
+    def save(self, note: Note) -> None:
+        with self._session_factory() as session:
+            session: Session
+            db_note = DBNote(id=note.id, title=note.title)
+            session.add(db_note)
+            session.commit()
 
-    async def delete(self, note_id: uuid.UUID) -> None:
-        db_note = await self.session.get(DBNote, note_id)
-        if db_note:
-            self.session.delete(db_note)
-            await self.session.commit()
+    def delete(self, note_id: uuid.UUID) -> None:
+        with self._session_factory() as session:
+            session: Session
+            db_note = session.get(DBNote, note_id)
+            if db_note:
+                session.delete(db_note)
+            session.commit()
