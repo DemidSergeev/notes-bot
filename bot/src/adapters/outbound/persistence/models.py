@@ -26,3 +26,12 @@ class Note(SQLModel, table=True):
     subject_id: uuid.UUID = Field(foreign_key="subject.id", index=True)
 
     subject: Subject | None = Relationship(back_populates="notes", cascade_delete=True)
+
+
+class Receipt(SQLModel, table=True):
+    id: uuid.UUID = Field(primary_key=True, index=True)
+    buyer_id: int
+    buyer_name: str
+    payment_credentials: str
+    price_rub: int
+    note: Note = Relationship(back_populates="checks")
