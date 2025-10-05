@@ -18,6 +18,7 @@ class Subject(SQLModel, table=True):
 
     notes: list["Note"] = Relationship(back_populates="subject")
 
+
 class Note(SQLModel, table=True):
     id: uuid.UUID = Field(primary_key=True, index=True)
     title: str
