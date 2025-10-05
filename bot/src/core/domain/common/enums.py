@@ -1,4 +1,4 @@
-from enum import Enum
+from enum import Enum, StrEnum
 
 
 class CourseYear(Enum):
@@ -8,3 +8,9 @@ class CourseYear(Enum):
     FOUR = 4
     FIVE = 5
     SIX = 6
+
+
+class StartActions(StrEnum):
+    BUY = "Купить",
+    SELL = "Продать",
+    ABOUT = "О нас"
