@@ -19,8 +19,8 @@ class Settings(BaseSettings):
     @property
     def POSTGRES_DSN(self) -> PostgresDsn:
         return PostgresDsn.build(
-            scheme="postgresql+psycopg3",
-            user=self.POSTGRES_USER,
+            scheme="postgresql+psycopg",
+            username=self.POSTGRES_USER,
             password=self.POSTGRES_PASSWORD,
             host=self.POSTGRES_HOST,
             port=self.POSTGRES_PORT,
