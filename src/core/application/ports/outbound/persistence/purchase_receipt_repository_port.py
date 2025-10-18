@@ -5,7 +5,7 @@ from src.core.domain.models import PurchaseReceipt
 
 
 class PurchaseReceiptRepositoryPort(Protocol):
-    def get_by_id(self, check_id: uuid.UUID) -> PurchaseReceipt | None:
+    def get_by_id(self, purchase_receipt_id: uuid.UUID) -> PurchaseReceipt | None:
         raise NotImplementedError
 
     def get_by_buyer_id(self, buyer_id: int) -> PurchaseReceipt | None:
