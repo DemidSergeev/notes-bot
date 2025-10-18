@@ -11,7 +11,7 @@ class SubjectRepositoryPort(Protocol):
     def get_by_name(self, name: str) -> Subject | None:
         raise NotImplementedError
 
-    def save(self, subject: Subject) -> None:
+    def save(self, subject: Subject, course_id: uuid.UUID) -> None:
         raise NotImplementedError
 
     def delete(self, subject_id: uuid.UUID) -> None:
