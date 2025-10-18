@@ -45,11 +45,11 @@ class SqlModelNoteRepository(NoteRepositoryPort):
                 price_rub=db_note.price_rub
             )
  
-    def save(self, note: Note) -> None:
+    def save(self, note: Note, subject_id: uuid.UUID) -> None:
         with self._session_factory() as session:
             session: Session
 
-            db_note = DbNote(id=note.id, title=note.title, price_rub=note.price_rub)
+            db_note = DbNote(id=note.id, title=note.title, price_rub=note.price_rub, subject_id=subject_id)
 
             session.add(db_note)
             session.commit()

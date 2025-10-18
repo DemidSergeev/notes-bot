@@ -11,7 +11,7 @@ class NoteRepositoryPort(Protocol):
     def get_by_title(self, title: str) -> Note | None:
         raise NotImplementedError
 
-    def save(self, note: Note) -> None:
+    def save(self, note: Note, subject_id: uuid.UUID) -> None:
         raise NotImplementedError
 
     def delete(self, note_id: uuid.UUID) -> None:
