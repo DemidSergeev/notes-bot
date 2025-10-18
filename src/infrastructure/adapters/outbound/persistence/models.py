@@ -5,6 +5,7 @@ from sqlmodel import Field, Relationship, SQLModel
 class Course(SQLModel, table=True):
     id: uuid.UUID = Field(primary_key=True, index=True)
     year: int
+
     subjects: list["Subject"] = Relationship(back_populates="course")
 
 
