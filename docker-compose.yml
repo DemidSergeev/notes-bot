@@ -1,0 +1,35 @@
+services:
+  notes-bot:
+    build: .
+    container_name: notes-bot
+    volumes:
+      - ./:/app
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=notes
+    depends_on:
+      - db
+    networks:
+      - notes-network
+
+  db:
+    image: postgres:latest
+    container_name: notes-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+      - POSTGRES_DB=notes
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    networks:
+      - notes-network
+
+volumes:
+  db_data:
+
+networks:
+  notes-network:
