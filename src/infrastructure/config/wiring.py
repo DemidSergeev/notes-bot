@@ -1,48 +1,23 @@
 from src.infrastructure.adapters.inbound.commands import CliCourseCommands
 from src.core.application.services import PurchaseService
-from src.core.application.ports.outbound.persistence import CourseRepositoryPort
-from src.core.domain.models import Subject, Course
-from src.core.domain.common.enums import CourseYear
+from src.core.application.services.data import CourseService, PurchaseReceiptService
+from src.infrastructure.adapters.outbound.persistence import SqlModelCourseRepository, SqlModelSubjectRepository, SqlModelNoteRepository, SqlModelPurchaseReceiptRepository
+from src.infrastructure.adapters.outbound.payment_details_provider import ConfigPaymentDetailsProvider
+from src.infrastructure.config.database import get_session
 
 
-class MockCourseRepository(CourseRepositoryPort):
-    def get_all(self):
-        return [
-            Course(
-                year=CourseYear.ONE,
-                subjects=[
-                    Subject(
-                        name="Mock subject 1",
-                        notes=[]
-                    ),
-                    Subject(
-                        name="Mock subject 2",
-                        notes=[]
-                    )
-                ]
-            ),
-            Course(
-                year=CourseYear.TWO,
-                subjects=[
-                    Subject(
-                        name="Mock subject 3",
-                        notes=[]
-                    ),
-                    Subject(
-                        name="Mock subject 4",
-                        notes=[]
-                    )
-                ]
-            )
-        ]
+note_repo = SqlModelNoteRepository(session_factory=get_session)
+subject_repo = SqlModelSubjectRepository(session_factory=get_session, note_repository=note_repo)
+course_repo = SqlModelCourseRepository(session_factory=get_session, subject_repository=subject_repo)
+purchase_receipt_repo = SqlModelPurchaseReceiptRepository(session_factory=get_session)
 
-course_repo = MockCourseRepository()
+course_service = CourseService(course_repo=course_repo, subject_repo=subject_repo)
+purchase_receipt_service = PurchaseReceiptService(purchase_receipt_repo=purchase_receipt_repo)
 
 purchase_service = PurchaseService(
-    course_repo=course_repo,
-    note_repo=...,
-    purchase_receipt_repo=...,
-    payment_details_provider=...,
+    course_service=course_service,
+    purchase_receipt_service=purchase_receipt_service,
+    payment_details_provider=ConfigPaymentDetailsProvider(),
 )
 
 course_commands = CliCourseCommands(purchase_service)
