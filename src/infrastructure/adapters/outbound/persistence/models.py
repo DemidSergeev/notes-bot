@@ -1,3 +1,5 @@
+__all__ = ["Course", "Subject", "Note", "PurchaseReceipt"]
+
 import uuid
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -6,7 +8,7 @@ class Course(SQLModel, table=True):
     id: uuid.UUID = Field(primary_key=True, index=True)
     year: int
 
-    subjects: list["Subject"] = Relationship(back_populates="course")
+    subjects: list["Subject"] = Relationship(back_populates="course", cascade_delete=True)
 
 
 class Subject(SQLModel, table=True):
@@ -14,9 +16,9 @@ class Subject(SQLModel, table=True):
     name: str
 
     course_id: uuid.UUID = Field(foreign_key="course.id", index=True)
-    course: Course | None = Relationship(back_populates="subjects", cascade_delete=True)
+    course: Course | None = Relationship(back_populates="subjects")
 
-    notes: list["Note"] = Relationship(back_populates="subject")
+    notes: list["Note"] = Relationship(back_populates="subject", cascade_delete=True)
 
 
 class Note(SQLModel, table=True):
@@ -26,9 +28,9 @@ class Note(SQLModel, table=True):
     price_rub: int
 
     subject_id: uuid.UUID = Field(foreign_key="subject.id", index=True)
-    subject: Subject | None = Relationship(back_populates="notes", cascade_delete=True)
+    subject: Subject | None = Relationship(back_populates="notes")
 
-    purchase_receipts: list["PurchaseReceipt"] = Relationship(back_populates="note")
+    purchase_receipts: list["PurchaseReceipt"] = Relationship(back_populates="note", cascade_delete=True)
 
 
 class PurchaseReceipt(SQLModel, table=True):
