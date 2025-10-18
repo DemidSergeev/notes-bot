@@ -69,12 +69,8 @@ class SqlModelCourseRepository(CourseRepositoryPort):
             return courses
  
     def save(self, course: Course) -> None:
-        # Save of subjects might be broken. Need testing
         with self._session_factory() as session:
             session: Session
-
-            for subject in course.subjects:
-                self._subject_repository.save(subject)
 
             db_course = DbCourse(id=course.id, year=course.year.value)
 
