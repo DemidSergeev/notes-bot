@@ -3,8 +3,8 @@ from sqlmodel import Session, select
 from collections.abc import Callable, Generator
 
 from src.core.application.ports.outbound.persistence import CourseRepositoryPort, SubjectRepositoryPort
-from src.core.domain.models import Course
-from .models import Course as DBCourse
+from src.core.domain.models import Course, Subject, Note
+from .models import Course as DbCourse
 from src.core.domain.common.enums import CourseYear
 
 
@@ -21,15 +21,12 @@ class SqlModelCourseRepository(CourseRepositoryPort):
         with self._session_factory() as session:
             session: Session
 
-            db_course = session.get(DBCourse, course_id)
+            db_course = session.get(DbCourse, course_id)
 
             if not db_course:
                 return None
 
-            subjects = [
-                self._subject_repository.get_by_id(subject.id)
-                for subject in db_course.subjects
-            ]
+            subjects = self._get_subjects(db_course)
 
             return Course(
                 id=db_course.id,
@@ -41,16 +38,13 @@ class SqlModelCourseRepository(CourseRepositoryPort):
         with self._session_factory() as session:
             session: Session
 
-            statement = select(DBCourse).where(DBCourse.year == year.value)
+            statement = select(DbCourse).where(DbCourse.year == year.value)
             db_course = session.exec(statement).first()
 
             if not db_course:
                 return None
 
-            subjects = [
-                self._subject_repository.get_by_id(subject.id)
-                for subject in db_course.subjects
-            ]
+            subjects = self._get_subjects(db_course)
 
             return Course(id=db_course.id, year=year, subjects=subjects)
 
@@ -58,15 +52,12 @@ class SqlModelCourseRepository(CourseRepositoryPort):
         with self._session_factory() as session:
             session: Session
 
-            statement = select(DBCourse)
+            statement = select(DbCourse)
             db_courses = session.exec(statement).all()
 
             courses = []
             for db_course in db_courses:
-                subjects = [
-                    self._subject_repository.get_by_id(subject.id)
-                    for subject in db_course.subjects
-                ]
+                subjects = self._get_subjects(db_course)
 
                 course = Course(
                     id=db_course.id,
@@ -85,7 +76,7 @@ class SqlModelCourseRepository(CourseRepositoryPort):
             for subject in course.subjects:
                 self._subject_repository.save(subject)
 
-            db_course = DBCourse(id=course.id, year=course.year.value, subjects=course.subjects)
+            db_course = DbCourse(id=course.id, year=course.year.value)
 
             session.add(db_course)
             session.commit()
@@ -94,8 +85,27 @@ class SqlModelCourseRepository(CourseRepositoryPort):
         with self._session_factory() as session:
             session: Session
 
-            db_course = session.get(DBCourse, course_id)
+            db_course = session.get(DbCourse, course_id)
 
             if db_course:
                 session.delete(db_course)
                 session.commit()
+
+    def _get_subjects(self, db_course: DbCourse) -> list[Subject]:
+        subjects = [
+            Subject(
+                id=db_subject.id,
+                name=db_subject.name,
+                notes=[
+                    Note(
+                        id=db_note.id,
+                        title=db_note.title,
+                        price_rub=db_note.price_rub
+                    )
+                    for db_note in db_subject.notes
+                ]
+            )
+            for db_subject in db_course.subjects
+        ]
+
+        return subjects
