@@ -9,7 +9,7 @@ class CourseService:
         self._course_repo = course_repo
         self._subject_repo = subject_repo
 
-    def create(self, year: CourseYear, subjects: list[Subject]) -> Course:
+    def create(self, year: CourseYear, subjects: list[Subject] = []) -> Course:
         course = Course(
             year=year,
             subjects=subjects
