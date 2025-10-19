@@ -2,14 +2,22 @@ import uuid
 from pytest import fixture
 
 from src.core.application.services import PurchaseService
+from src.core.application.services.data import CourseService, PurchaseReceiptService
 
 
 @fixture(scope="module")
-def purchase_service(mock_course_repo, mock_note_repo, mock_purchase_receipt_repo, payment_details_provider) -> PurchaseService:
+def course_service(mock_course_repo, mock_subject_repo):
+    return CourseService(mock_course_repo, mock_subject_repo)
+
+@fixture(scope="module")
+def purchase_receipt_service(mock_purchase_receipt_repo):
+    return PurchaseReceiptService(mock_purchase_receipt_repo)
+
+@fixture(scope="module")
+def purchase_service(course_service, purchase_receipt_service, payment_details_provider) -> PurchaseService:
     return PurchaseService(
-        mock_course_repo,
-        mock_note_repo,
-        mock_purchase_receipt_repo,
+        course_service,
+        purchase_receipt_service,
         payment_details_provider
     )
 
@@ -30,4 +38,4 @@ class TestPurchaseService:
 
     def test_generate_purchase_receipt(self, purchase_service: PurchaseService, notes, buyer):
         purchase_receipt = purchase_service.generate_purchase_receipt(notes[0], buyer)
-        purchase_service._purchase_receipt_repo.save.assert_called_with(purchase_receipt)
+        purchase_service._purchase_receipt_service._purchase_receipt_repo.save.assert_called_with(purchase_receipt)

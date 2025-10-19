@@ -4,7 +4,8 @@ from unittest.mock import MagicMock
 
 from src.core.domain.models import Course, Subject, Note, Buyer, PurchaseReceipt
 from src.core.domain.common.enums import CourseYear
-from src.core.application.ports.outbound.persistence import CourseRepositoryPort, NoteRepositoryPort, PurchaseReceiptRepositoryPort
+from src.core.application.ports.outbound.persistence import CourseRepositoryPort, SubjectRepositoryPort, NoteRepositoryPort, PurchaseReceiptRepositoryPort
+from src.core.application.services.data import CourseService, SubjectService, NoteService, PurchaseReceiptService
 from src.core.application.ports.outbound import PaymentDetailsProviderPort
 
 
@@ -49,6 +50,15 @@ def mock_course_repo(course):
     repo.get_by_id.return_value = course
     repo.get_by_year.return_value = course
     repo.get_all.return_value = [course, course]
+    repo.save.return_value = None
+    repo.delete.return_value = None
+    return repo
+
+@fixture(scope="module")
+def mock_subject_repo(subjects):
+    repo = MagicMock(spec=SubjectRepositoryPort)
+    repo.get_by_id.return_value = subjects[0]
+    repo.get_by_name.return_value = subjects[0]
     repo.save.return_value = None
     repo.delete.return_value = None
     return repo
