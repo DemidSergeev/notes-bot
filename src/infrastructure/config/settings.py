@@ -28,6 +28,7 @@ class Settings(BaseSettings):
         )
 
     # TELEGRAM_ADMIN_ID: int
+    TELEGRAM_BOT_TOKEN: str
 
     # @computed_field
     # @property
@@ -41,13 +42,29 @@ class Settings(BaseSettings):
     PAYMENT_DETAILS: str = "6666 6666 6666 6666"
 
     LOGGER_NAME: str = "notes_bot"
-    LOGGER_LOGFILE_NAME: str = "notes_bot.log"
+
+    @computed_field
+    @property
+    def LOG_DIR(self) -> str:
+        if not pathlib.Path("./logs").exists():
+            pathlib.Path("./logs").mkdir(parents=True, exist_ok=True)
+        return "./logs"
+
+    @computed_field
+    @property
+    def LOGGER_LOGFILE_NAME(self) -> str:
+        return f"{self.LOG_DIR}/{self.LOGGER_NAME}.log"
+
+    BOT_LOGLEVEL: str = "DEBUG"
+    SQLALCHEMY_LOGLEVEL: str = "WARNING"
+    TELEGRAM_LOGLEVEL: str = "DEBUG"
+    HTTP_LOGLEVEL: str = "WARNING"
 
     @computed_field
     @property
     def LOGGING_CONFIG(self) -> dict[str, Any]:
         """This property depends on presence and structure of logging_config.json"""
-        config_file_path = pathlib.Path(__file__).parent.parent.parent / "config" / "logging_config.json"
+        config_file_path = pathlib.Path(__file__).parent.parent.parent.parent / "config" / "logging_config.json"
         with open(config_file_path) as f:
             config = json.load(f)
             config["handlers"]["file"]["filename"] = self.LOGGER_LOGFILE_NAME
