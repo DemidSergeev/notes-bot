@@ -1,4 +1,4 @@
-from enum import Enum, StrEnum
+from enum import Enum
 
 
 class CourseYear(Enum):
@@ -9,8 +9,12 @@ class CourseYear(Enum):
     FIVE = 5
     SIX = 6
 
+class ActionPair:
+    def __init__(self, label: str, code: str) -> None:
+        self.label = label
+        self.code = code
 
-class StartActions(StrEnum):
-    BUY = "Купить",
-    SELL = "Продать",
-    ABOUT = "О нас"
+class StartActions(Enum):
+    BUY = ActionPair("Купить", "buy")
+    SELL = ActionPair("Продать", "sell")
+    ABOUT = ActionPair("О нас", "about")
