@@ -56,9 +56,12 @@ class SqlModelSubjectRepository(SubjectRepositoryPort):
                 name=subject.name,
                 course_id=course_id
             )
-
             session.add(db_subject)
             session.commit()
+
+            for note in subject.notes:
+                self._note_repository.save(note, subject.id)
+
 
     def delete(self, subject_id: uuid.UUID) -> None:
         with self._session_factory() as session:

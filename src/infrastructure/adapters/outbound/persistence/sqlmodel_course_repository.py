@@ -73,9 +73,12 @@ class SqlModelCourseRepository(CourseRepositoryPort):
             session: Session
 
             db_course = DbCourse(id=course.id, year=course.year.value)
-
             session.add(db_course)
             session.commit()
+
+            for subject in course.subjects:
+                self._subject_repository.save(subject, course.id)
+
 
     def delete(self, course_id: uuid.UUID) -> None:
         with self._session_factory() as session:
