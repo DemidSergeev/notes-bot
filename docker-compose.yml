@@ -9,6 +9,7 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
       - POSTGRES_DB=notes
+      - TELEGRAM_BOT_TOKEN=8299540683:AAF9cIRS7LQk-6sAx9VAxvCgg12CdE7eZmU
     depends_on:
       - db
     networks:
