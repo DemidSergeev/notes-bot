@@ -8,7 +8,7 @@ from .settings import settings
 import src.infrastructure.adapters.outbound.persistence.models # noqa: F401
 
 
-engine = create_engine(str(settings.POSTGRES_DSN), echo=True)
+engine = create_engine(str(settings.POSTGRES_DSN), echo=False)
 
 def create_db_and_tables() -> None:
     sleep(1) # Костыль for postgres container startup
@@ -26,22 +26,38 @@ def get_session() -> Generator[Session, None, None]:
 def init_database() -> None:
     create_db_and_tables()
     if not has_initial_data():
-        from .wiring import course_service
-        from src.core.domain.models import Subject
+        from .wiring import course_repo
+        from src.core.domain.models import Course, Subject, Note
         from src.core.domain.common.enums import CourseYear
 
         subjects_year_one = [
-            Subject(name="Math"),
-            Subject(name="Science"),
-            Subject(name="History"),
+            Subject(name="Math", notes=[
+                Note(title="Limits and derivatives", price_rub=99),
+                Note(title="Linear equations", price_rub=79)
+            ]),
+            Subject(name="Science", notes=[
+                Note(title="Physics Notes", price_rub=89)
+            ]),
+            Subject(name="History", notes=[
+                Note(title="World War II Notes", price_rub=79)
+            ]),
         ]
-        course_service.create(subjects=subjects_year_one, year=CourseYear.ONE)
+        course_year_one = Course(
+            year=CourseYear.ONE,
+            subjects=subjects_year_one
+        )
+        course_repo.save(course=course_year_one)
+
         subjects_year_two = [
             Subject(name="Algebra"),
             Subject(name="Biology"),
             Subject(name="World History"),
         ]
-        course_service.create(subjects=subjects_year_two, year=CourseYear.TWO)
+        course_year_two = Course(
+            year=CourseYear.TWO,
+            subjects=subjects_year_two
+        )
+        course_repo.save(course=course_year_two)
 
 def has_initial_data() -> bool:
     with get_session() as session:
