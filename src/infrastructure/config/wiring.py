@@ -1,4 +1,4 @@
-from src.core.application.services import PurchaseService
+from src.core.application.services import PurchaseService, DataService
 from src.infrastructure.adapters.outbound.persistence import SqlModelCourseRepository, SqlModelSubjectRepository, SqlModelNoteRepository, SqlModelPurchaseReceiptRepository
 from src.infrastructure.adapters.outbound.payment_details_provider import ConfigPaymentDetailsProvider
 from src.infrastructure.adapters.inbound.telegram import TelegramHandlers
@@ -12,9 +12,13 @@ subject_repo = SqlModelSubjectRepository(session_factory=get_session, note_repos
 course_repo = SqlModelCourseRepository(session_factory=get_session, subject_repository=subject_repo)
 purchase_receipt_repo = SqlModelPurchaseReceiptRepository(session_factory=get_session)
 
-purchase_service = PurchaseService(
+data_service = DataService(
     course_repo=course_repo,
     subject_repo=subject_repo,
+    note_repo=note_repo
+)
+
+purchase_service = PurchaseService(
     note_repo=note_repo,
     purchase_receipt_repo=purchase_receipt_repo,
     payment_details_provider=ConfigPaymentDetailsProvider(),
@@ -22,6 +26,7 @@ purchase_service = PurchaseService(
 
 telegram_handlers = TelegramHandlers(
     purchase_service=purchase_service,
+    data_service=data_service,
     welcome_message="Добро пожаловать в бот по покупке конспектов!"
 )
 

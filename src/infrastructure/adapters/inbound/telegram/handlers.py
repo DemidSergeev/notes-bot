@@ -2,7 +2,7 @@ from enum import Enum
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
 
-from src.core.application.ports.inbound import PurchaseServicePort
+from src.core.application.ports.inbound import PurchaseServicePort, DataServicePort
 from src.core.domain.models import Buyer
 from src.core.domain.common.enums import StartActions, CourseYear
 
@@ -15,8 +15,9 @@ class States(Enum):
     PURCHASE_CONFIRMATION = 5
 
 class TelegramHandlers:
-    def __init__(self, purchase_service: PurchaseServicePort, welcome_message: str) -> None:
+    def __init__(self, purchase_service: PurchaseServicePort, data_service: DataServicePort, welcome_message: str) -> None:
         self._purchase_service = purchase_service
+        self._data_service = data_service
         self._welcome_message = welcome_message
 
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -38,7 +39,7 @@ class TelegramHandlers:
         if query.data not in ["buy", "sell"]:
             return
 
-        courses = self._purchase_service.get_courses()
+        courses = self._data_service.get_courses()
         reply = "Выберите курс:\n"
         buttons = [
             InlineKeyboardButton(text=f"Курс {course.year.value}", callback_data=f"{query.data}/course/{course.year.value}")
@@ -56,7 +57,7 @@ class TelegramHandlers:
             return
 
         course_year = CourseYear(int(data_parts[2]))
-        subjects = self._purchase_service.get_subjects(course_year)
+        subjects = self._data_service.get_subjects(course_year)
         reply = f"Выберите предмет ({course_year.value}-й курс):\n"
 
         buttons = [
@@ -75,7 +76,7 @@ class TelegramHandlers:
             return
 
         subject_id = data_parts[2]
-        notes = self._purchase_service.get_notes(subject_id)
+        notes = self._data_service.get_notes(subject_id)
         reply = "Выберите конспект:\n"
 
         buttons = [
