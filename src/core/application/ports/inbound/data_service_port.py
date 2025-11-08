@@ -14,3 +14,6 @@ class DataServicePort(Protocol):
 
     def get_notes(self, subject_id: uuid.UUID) -> list[Note]:
         raise NotImplementedError
+
+    def get_note_file(self, note_id: uuid.UUID) -> str | None:
+        raise NotImplementedError
