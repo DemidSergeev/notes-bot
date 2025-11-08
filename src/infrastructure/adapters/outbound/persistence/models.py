@@ -26,6 +26,7 @@ class Note(SQLModel, table=True):
     title: str
 
     price_rub: int
+    is_approved: bool = Field(default=False)
 
     subject_id: uuid.UUID = Field(foreign_key="subject.id", index=True)
     subject: Subject | None = Relationship(back_populates="notes")

@@ -7,3 +7,4 @@ from .base_model import BaseModel
 class Note(BaseModel):
     title: str
     price_rub: int
+    is_approved: bool = False

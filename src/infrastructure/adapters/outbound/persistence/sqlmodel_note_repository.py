@@ -26,8 +26,9 @@ class SqlModelNoteRepository(NoteRepositoryPort):
             return Note(
                 id=db_note.id,
                 title=db_note.title,
-                price_rub=db_note.price_rub
-            ) 
+                price_rub=db_note.price_rub,
+                is_approved=db_note.is_approved
+            )
 
     def get_by_title(self, title: str) -> Note | None:
         with self._session_factory() as session:
@@ -42,14 +43,42 @@ class SqlModelNoteRepository(NoteRepositoryPort):
             return Note(
                 id=db_note.id,
                 title=db_note.title,
-                price_rub=db_note.price_rub
+                price_rub=db_note.price_rub,
+                is_approved=db_note.is_approved
             )
  
+    def get_not_approved(self) -> list[Note]:
+        with self._session_factory() as session:
+            session: Session
+
+            statement = select(DbNote).where(not DbNote.is_approved)
+            db_notes = session.exec(statement).all()
+
+            return [
+                Note(
+                    id=db_note.id,
+                    title=db_note.title,
+                    price_rub=db_note.price_rub,
+                    is_approved=db_note.is_approved
+                )
+                for db_note in db_notes
+            ]
+
     def save(self, note: Note, subject_id: uuid.UUID) -> None:
         with self._session_factory() as session:
             session: Session
 
-            db_note = DbNote(id=note.id, title=note.title, price_rub=note.price_rub, subject_id=subject_id)
+            db_note = session.get(DbNote, note.id)
+            if db_note and not subject_id:
+                subject_id = db_note.subject_id
+
+            db_note = DbNote(
+                id=note.id,
+                title=note.title,
+                price_rub=note.price_rub,
+                is_approved=note.is_approved,
+                subject_id=subject_id
+            )
 
             session.add(db_note)
             session.commit()
