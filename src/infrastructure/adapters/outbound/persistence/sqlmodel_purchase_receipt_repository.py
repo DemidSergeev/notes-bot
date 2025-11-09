@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from collections.abc import Callable, Generator
 
 from src.core.application.ports.outbound.persistence import PurchaseReceiptRepositoryPort
-from src.core.domain.models import PurchaseReceipt, Note, Buyer
+from src.core.domain.models import PurchaseReceipt, Note, User
 from .models import (
     PurchaseReceipt as DbPurchaseReceipt,
 )
@@ -66,7 +66,7 @@ class SqlModelPurchaseReceiptRepository(PurchaseReceiptRepositoryPort):
     def _create_domain_purchase_receipt(self, db_purchase_receipt: DbPurchaseReceipt) -> PurchaseReceipt:
         db_note = db_purchase_receipt.note
         note = Note(id=db_note.id, title=db_note.title, price_rub=db_note.price_rub)
-        buyer = Buyer(external_id=db_purchase_receipt.buyer_id, name=db_purchase_receipt.buyer_name)
+        buyer = User(external_id=db_purchase_receipt.buyer_id, name=db_purchase_receipt.buyer_name)
 
         return PurchaseReceipt(
             id=db_purchase_receipt.id,

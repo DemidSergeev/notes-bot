@@ -2,11 +2,11 @@ from dataclasses import dataclass
 
 from .base_model import BaseModel
 from .note import Note
-from .buyer import Buyer
+from .user import User
 
 
 @dataclass
 class PurchaseReceipt(BaseModel):
-    buyer: Buyer
+    buyer: User
     payment_details: str
     note: Note

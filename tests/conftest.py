@@ -2,7 +2,7 @@ import random
 from pytest import fixture
 from unittest.mock import MagicMock
 
-from src.core.domain.models import Course, Subject, Note, Buyer, PurchaseReceipt
+from src.core.domain.models import Course, Subject, Note, User, PurchaseReceipt
 from src.core.domain.common.enums import CourseYear
 from src.core.application.ports.outbound.persistence import CourseRepositoryPort, SubjectRepositoryPort, NoteRepositoryPort, PurchaseReceiptRepositoryPort
 from src.core.application.services.data import CourseService, SubjectService, NoteService, PurchaseReceiptService
@@ -31,7 +31,7 @@ def course(subjects):
 def buyer():
     external_id = 1234567890
     name = "John Doe"
-    return Buyer(external_id, name)
+    return User(external_id, name)
 
 @fixture(scope="module")
 def payment_details_provider():
