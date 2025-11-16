@@ -3,12 +3,10 @@
     "disable_existing_loggers": false,
     "formatters": {
       "simple": {
-        "class": "src.infrastructure.config.logger.PathFormatter",
-        "format": "[%(levelname)s] %(pathname)s: %(message)s"
+        "format": "%(levelname)8s %(name)s:%(lineno)d: %(message)s"
       },
       "detailed": {
-        "class": "src.infrastructure.config.logger.PathFormatter",
-        "format": "[%(levelname)s] %(pathname)s: %(asctime)s: %(message)s",
+        "format": "%(asctime)s %(levelname)8s %(name)s:%(lineno)d: %(message)s",
         "datefmt": "%Y-%m-%dT%H:%M:%S%z"
       }
     },
@@ -20,12 +18,13 @@
         "stream": "ext://sys.stderr"
       },
       "file": {
-        "class": "logging.handlers.RotatingFileHandler",
+        "class": "logging.handlers.TimedRotatingFileHandler",
         "level": "DEBUG",
         "formatter": "detailed",
-        "filename": "./bot.log",
-        "maxBytes": 10000000,
-        "backupCount": 3
+        "delay": true,
+        "filename": "is changed in app",
+        "when": "midnight",
+        "backupCount": 30
       },
       "queue_handler": {
         "class": "logging.handlers.QueueHandler",
@@ -42,10 +41,6 @@
         "handlers": [
           "queue_handler"
         ]
-      },
-      "watchfiles": {
-        "level": "WARNING",
-        "propagate": false
       }
     }
   }

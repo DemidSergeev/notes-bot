@@ -46,8 +46,6 @@ class Settings(BaseSettings):
 
     PAYMENT_DETAILS: str = "6666 6666 6666 6666"
 
-    LOGGER_NAME: str = "notes_bot"
-
     @computed_field
     @property
     def LOG_DIR(self) -> str:
@@ -57,8 +55,8 @@ class Settings(BaseSettings):
 
     @computed_field
     @property
-    def LOGGER_LOGFILE_NAME(self) -> str:
-        return f"{self.LOG_DIR}/{self.LOGGER_NAME}.log"
+    def LOG_FILE_NAME(self) -> str:
+        return f"{self.LOG_DIR}/notes_bot.log"
 
     BOT_LOGLEVEL: str = "DEBUG"
     SQLALCHEMY_LOGLEVEL: str = "WARNING"
@@ -72,7 +70,7 @@ class Settings(BaseSettings):
         config_file_path = pathlib.Path(__file__).parent.parent.parent.parent / "config" / "logging_config.json"
         with open(config_file_path) as f:
             config = json.load(f)
-            config["handlers"]["file"]["filename"] = self.LOGGER_LOGFILE_NAME
+            config["handlers"]["file"]["filename"] = self.LOG_FILE_NAME
             return config
 
 

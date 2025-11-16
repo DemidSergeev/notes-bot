@@ -10,9 +10,7 @@ from src.core.application.ports.inbound import PurchaseServicePort, DataServiceP
 from src.core.domain.models import User
 from src.core.domain.common.enums import StartActions, CourseYear
 
-from src.infrastructure.config import settings
-
-logger = logging.getLogger(settings.LOGGER_NAME)
+logger = logging.getLogger(__name__)
 
 class States(Enum):
     START = 1
