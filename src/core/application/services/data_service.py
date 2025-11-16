@@ -1,6 +1,10 @@
+import logging
 from ..ports.inbound import DataServicePort
 from ..ports.outbound.persistence import CourseRepositoryPort, SubjectRepositoryPort, NoteRepositoryPort
 from ..ports.outbound.storage import NoteStoragePort
+
+
+logger = logging.getLogger(__name__)
 
 class DataService(DataServicePort):
     def __init__(
@@ -44,5 +48,7 @@ class DataService(DataServicePort):
 
         if not note_file:
             raise ValueError(f"Note file with id {note.id} does not exist in storage.")
+
+        logger.debug("Retrieved note %s (UUID %s) from storage", note.title, note.id)
 
         return note_file 

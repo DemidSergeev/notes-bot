@@ -1,3 +1,4 @@
+import logging
 from collections.abc import Generator
 from contextlib import contextmanager
 from time import sleep
@@ -7,6 +8,8 @@ from .settings import settings
 # Import of models is needed for SQLModel to generate tables from metadata
 import src.infrastructure.adapters.outbound.persistence.models # noqa: F401
 
+
+logger = logging.getLogger(__name__)
 
 engine = create_engine(str(settings.POSTGRES_DSN), echo=False)
 
@@ -58,6 +61,7 @@ def init_database() -> None:
             subjects=subjects_year_two
         )
         course_repo.save(course=course_year_two)
+        logging.info("Initial data in DB created")
 
 def has_initial_data() -> bool:
     with get_session() as session:

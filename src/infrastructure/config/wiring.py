@@ -1,3 +1,5 @@
+import logging
+
 from src.core.application.services import PurchaseService, DataService, SellService
 from src.infrastructure.adapters.outbound.persistence import SqlModelCourseRepository, SqlModelSubjectRepository, SqlModelNoteRepository, SqlModelPurchaseReceiptRepository
 from src.infrastructure.adapters.outbound.storage import MinioNoteStorage
@@ -9,12 +11,16 @@ from src.infrastructure.config.storage import get_client
 from src.infrastructure.config import settings
 
 
+logger = logging.getLogger(__name__)
+
 note_repo = SqlModelNoteRepository(session_factory=get_session)
 subject_repo = SqlModelSubjectRepository(session_factory=get_session, note_repository=note_repo)
 course_repo = SqlModelCourseRepository(session_factory=get_session, subject_repository=subject_repo)
 purchase_receipt_repo = SqlModelPurchaseReceiptRepository(session_factory=get_session)
 
 note_storage = MinioNoteStorage(client=get_client(), bucket=settings.MINIO_BUCKET)
+
+logger.debug("Repositories and storage wiring complete")
 
 data_service = DataService(
     course_repo=course_repo,
@@ -34,6 +40,8 @@ sell_service = SellService(
     note_storage=note_storage
 )
 
+logger.debug("Services wiring complete")
+
 telegram_handlers = TelegramHandlers(
     purchase_service=purchase_service,
     data_service=data_service,
@@ -41,7 +49,11 @@ telegram_handlers = TelegramHandlers(
     welcome_message="Добро пожаловать в бот по покупке конспектов!"
 )
 
+logger.debug("Telegram handlers wiring complete")
+
 application = Application(
     telegram_handlers=telegram_handlers,
     telegram_token=settings.TELEGRAM_BOT_TOKEN
 )
+
+logger.debug("Application wiring complete")

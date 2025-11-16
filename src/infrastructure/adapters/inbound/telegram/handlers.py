@@ -1,7 +1,6 @@
 import random
 import logging
 import io
-import traceback
 from enum import Enum
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
@@ -9,6 +8,7 @@ from telegram.ext import ContextTypes
 from src.core.application.ports.inbound import PurchaseServicePort, DataServicePort, SellServicePort
 from src.core.domain.models import User
 from src.core.domain.common.enums import StartActions, CourseYear
+
 
 logger = logging.getLogger(__name__)
 
@@ -139,14 +139,11 @@ class TelegramHandlers:
         return States.NOTE_UPLOAD
 
     async def upload_note_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-        # 1. Check for the file (document is preferred)
         document = update.message.document
         if not document:
             await update.message.reply_text("Пожалуйста, отправьте конспект в виде файла (документа).")
-            # You might want to return States.NOTE_UPLOAD here to keep them in this state
             return States.NOTE_UPLOAD
 
-        # 2. Retrieve necessary data from context and user
         subject_id = context.user_data.get("subject_id")
         # user = update.effective_user
         # seller = User(external_id=user.id, name=user.full_name)
@@ -163,16 +160,14 @@ class TelegramHandlers:
                 file=file,
             )
             
-            # 4. Confirm and clear context
             await update.message.reply_text(
                 f"Спасибо, файл {document.file_name} отправлен на модерацию! Мы свяжемся с вами после проверки."
             )
             context.user_data.clear()
-            # Clear context and return to the entry state
             return States.START
 
         except Exception:
             # Handle potential errors during service call (e.g., storage failure)
-            logger.error(f"Error uploading note: {traceback.format_exc()}")
+            logger.exception("Error uploading note")
             await update.message.reply_text("Произошла ошибка при загрузке. Попробуйте ещё раз.")
             return States.NOTE_UPLOAD

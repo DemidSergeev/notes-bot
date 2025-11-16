@@ -1,7 +1,11 @@
+import logging
+
 from ..ports.inbound import ReviewServicePort
 from ..ports.outbound.persistence import NoteRepositoryPort
 from ..ports.outbound.storage import NoteStoragePort
 
+
+logger = logging.getLogger(__name__)
 
 class ReviewService(ReviewServicePort):
     def __init__(
@@ -19,6 +23,7 @@ class ReviewService(ReviewServicePort):
         
         note.is_approved = True
         self.note_repo.save(note, subject_id=None)  # subject_id is not updated
+        logging.debug("Note %s (UUID %s) approved", note.title, note.id)
 
     def reject_note(self, uploader_user_id, note_id, reason: str) -> None:
         note = self.note_repo.get_by_id(note_id)
@@ -27,3 +32,4 @@ class ReviewService(ReviewServicePort):
 
         self.note_storage.delete(note.id)
         self.note_repo.delete(note.id)
+        logging.debug("Note %s (UUID %s) rejected and deleted", note.title, note.id)

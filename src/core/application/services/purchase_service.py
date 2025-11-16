@@ -1,8 +1,12 @@
+import logging
+
 from ..ports.inbound import PurchaseServicePort
 from ..ports.outbound.persistence import NoteRepositoryPort, PurchaseReceiptRepositoryPort
 from ..ports.outbound import PaymentDetailsProviderPort
 from src.core.domain.models import PurchaseReceipt
 
+
+logger = logging.getLogger(__name__)
 
 class PurchaseService(PurchaseServicePort):
     def __init__(
@@ -28,5 +32,6 @@ class PurchaseService(PurchaseServicePort):
         )
 
         self._purchase_receipt_repo.save(purchase_receipt)
+        logger.debug("Purchase receipt for buyer %s (ext. ID %s) and note %s (UUID %s) generated", buyer.name, buyer.external_id, note.title, note.id)
 
         return purchase_receipt

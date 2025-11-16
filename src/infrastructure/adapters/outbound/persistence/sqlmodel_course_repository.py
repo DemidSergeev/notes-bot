@@ -1,3 +1,4 @@
+import logging
 import uuid
 from sqlmodel import Session, select
 from collections.abc import Callable, Generator
@@ -7,6 +8,8 @@ from src.core.domain.models import Course, Subject, Note
 from .models import Course as DbCourse
 from src.core.domain.common.enums import CourseYear
 
+
+logger = logging.getLogger(__name__)
 
 class SqlModelCourseRepository(CourseRepositoryPort):
     def __init__(
@@ -79,6 +82,8 @@ class SqlModelCourseRepository(CourseRepositoryPort):
             for subject in course.subjects:
                 self._subject_repository.save(subject, course.id)
 
+            logger.debug("Course %d (UUID %s) saved in DB", course.year, course.id)
+
 
     def delete(self, course_id: uuid.UUID) -> None:
         with self._session_factory() as session:
@@ -89,6 +94,8 @@ class SqlModelCourseRepository(CourseRepositoryPort):
             if db_course:
                 session.delete(db_course)
                 session.commit()
+
+                logger.debug("Course %d (UUID %s) deleted from DB", db_course.year, db_course.id)
 
     def _get_subjects(self, db_course: DbCourse) -> list[Subject]:
         subjects = [

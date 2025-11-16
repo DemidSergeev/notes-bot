@@ -1,3 +1,4 @@
+import logging
 import uuid
 from sqlmodel import Session, select
 from collections.abc import Callable, Generator
@@ -7,6 +8,9 @@ from src.core.domain.models import PurchaseReceipt, Note, User
 from .models import (
     PurchaseReceipt as DbPurchaseReceipt,
 )
+
+
+logger = logging.getLogger(__name__)
 
 class SqlModelPurchaseReceiptRepository(PurchaseReceiptRepositoryPort):
     def __init__(
@@ -52,6 +56,14 @@ class SqlModelPurchaseReceiptRepository(PurchaseReceiptRepositoryPort):
 
             session.add(db_purchase_receipt)
             session.commit()
+            logger.debug("Purchase receipt (UUID %s) saved in DB", purchase_receipt.id)
+            logger.debug(
+                "Purchase receipt details: buyer %s (ext. ID %s), note %s (UUID %s)",
+                purchase_receipt.buyer.name,
+                purchase_receipt.buyer.external_id,
+                purchase_receipt.note.title,
+                purchase_receipt.note.id
+            )
 
     def delete(self, purchase_receipt_id: uuid.UUID) -> None:
         with self._session_factory() as session:
@@ -62,6 +74,7 @@ class SqlModelPurchaseReceiptRepository(PurchaseReceiptRepositoryPort):
             if db_purchase_receipt:
                 session.delete(db_purchase_receipt)
                 session.commit()
+                logger.debug("Purchase receipt (UUID %s) deleted from DB", db_purchase_receipt.id)
 
     def _create_domain_purchase_receipt(self, db_purchase_receipt: DbPurchaseReceipt) -> PurchaseReceipt:
         db_note = db_purchase_receipt.note

@@ -1,3 +1,4 @@
+import logging
 import uuid
 from sqlmodel import Session, select
 from collections.abc import Callable, Generator
@@ -6,6 +7,8 @@ from src.core.application.ports.outbound.persistence import NoteRepositoryPort
 from src.core.domain.models import Note
 from .models import Note as DbNote
 
+
+logger = logging.getLogger(__name__)
 
 class SqlModelNoteRepository(NoteRepositoryPort):
     def __init__(
@@ -82,6 +85,7 @@ class SqlModelNoteRepository(NoteRepositoryPort):
 
             session.add(db_note)
             session.commit()
+            logger.debug("Note %s (UUID %s) saved in DB", note.title, note.id)
 
     def delete(self, note_id: uuid.UUID) -> None:
         with self._session_factory() as session:
@@ -92,3 +96,4 @@ class SqlModelNoteRepository(NoteRepositoryPort):
             if db_note:
                 session.delete(db_note)
                 session.commit()
+                logger.debug("Note %s (UUID %s) deleted from DB", db_note.title, db_note.id)

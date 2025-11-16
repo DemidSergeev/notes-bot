@@ -1,7 +1,10 @@
+import logging
 from minio import Minio
 
 from src.core.application.ports.outbound.storage import NoteStoragePort
 
+
+logger = logging.getLogger(__name__)
 
 class MinioNoteStorage(NoteStoragePort):
     def __init__(self, client: Minio, bucket: str):
@@ -25,15 +28,19 @@ class MinioNoteStorage(NoteStoragePort):
         return url
 
     def save(self, note, file):
+        length = len(file.getvalue())
         result = self._client.put_object(
             bucket_name=self._bucket,
             object_name=str(note.id),
             data=file,
-            length=len(file.getvalue()),
+            length=length
         )
+        logger.debug("Note %s (UUID %s) saved in storage. File size = %.1f Kb", note.title, note.id, length / 1024)
 
     def delete(self, note_id):
         self._client.remove_object(
             bucket_name=self._bucket,
             object_name=str(note_id)
         )
+
+        logger.debug("Note (UUID %s) deleted from storage", note_id)

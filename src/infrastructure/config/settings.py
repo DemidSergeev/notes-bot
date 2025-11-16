@@ -61,6 +61,7 @@ class Settings(BaseSettings):
     BOT_LOGLEVEL: str = "DEBUG"
     SQLALCHEMY_LOGLEVEL: str = "WARNING"
     TELEGRAM_LOGLEVEL: str = "DEBUG"
+    TELERGAM_EXTBOT_LOGLEVEL: str = "INFO"
     HTTP_LOGLEVEL: str = "WARNING"
 
     @computed_field

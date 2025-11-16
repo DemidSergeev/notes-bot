@@ -1,7 +1,10 @@
+import logging
 from telegram.ext import ApplicationBuilder, ConversationHandler, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
 from .handlers import TelegramHandlers, States
 
+
+logger = logging.getLogger(__name__)
 
 class Application:
     def __init__(self, telegram_handlers: TelegramHandlers, telegram_token: str):
@@ -13,11 +16,13 @@ class Application:
 
         start_handler = CommandHandler("start", self._telegram_handlers.start_command)
         cancel_handler = CommandHandler("cancel", self._telegram_handlers.cancel_command)
+
         list_courses_handler = CallbackQueryHandler(self._telegram_handlers.list_courses_callback, pattern=r"^(buy|sell)$")
         list_subjects_handler = CallbackQueryHandler(self._telegram_handlers.list_subjects_callback, pattern=r"^(buy|sell)/course/\d+$")
         list_notes_handler = CallbackQueryHandler(self._telegram_handlers.list_notes_callback, pattern=fr"^buy/subject/{regex_uuid}$")
         buy_note_handler = CallbackQueryHandler(self._telegram_handlers.buy_note_callback, pattern=fr"^buy/note/{regex_uuid}$")
         prompt_upload_note_handler = CallbackQueryHandler(self._telegram_handlers.prompt_upload_note_callback, pattern=fr"^sell/subject/{regex_uuid}$")
+
         upload_note_handler = MessageHandler(filters.Document.ALL, self._telegram_handlers.upload_note_handler)
 
         conversation_handler = ConversationHandler(
@@ -36,6 +41,7 @@ class Application:
         )
 
         self._application.add_handler(conversation_handler)
+        logger.debug("Conversation handler added")
 
     def run(self) -> None:
         self._application.run_polling()
