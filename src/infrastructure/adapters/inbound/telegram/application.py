@@ -1,5 +1,4 @@
-from enum import Enum
-from telegram.ext import ApplicationBuilder, ConversationHandler, CommandHandler, CallbackQueryHandler
+from telegram.ext import ApplicationBuilder, ConversationHandler, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
 from .handlers import TelegramHandlers, States
 
@@ -16,8 +15,10 @@ class Application:
         cancel_handler = CommandHandler("cancel", self._telegram_handlers.cancel_command)
         list_courses_handler = CallbackQueryHandler(self._telegram_handlers.list_courses_callback, pattern=r"^(buy|sell)$")
         list_subjects_handler = CallbackQueryHandler(self._telegram_handlers.list_subjects_callback, pattern=r"^(buy|sell)/course/\d+$")
-        list_notes_handler = CallbackQueryHandler(self._telegram_handlers.list_notes_callback, pattern=r"^buy/subject/" + regex_uuid + r"$")
-        buy_note_handler = CallbackQueryHandler(self._telegram_handlers.buy_note_callback, pattern=r"^buy/note/" + regex_uuid + r"$")
+        list_notes_handler = CallbackQueryHandler(self._telegram_handlers.list_notes_callback, pattern=fr"^buy/subject/{regex_uuid}$")
+        buy_note_handler = CallbackQueryHandler(self._telegram_handlers.buy_note_callback, pattern=fr"^buy/note/{regex_uuid}$")
+        prompt_upload_note_handler = CallbackQueryHandler(self._telegram_handlers.prompt_upload_note_callback, pattern=fr"^sell/subject/{regex_uuid}$")
+        upload_note_handler = MessageHandler(filters.Document.ALL, self._telegram_handlers.upload_note_handler)
 
         conversation_handler = ConversationHandler(
             entry_points=[start_handler],
@@ -26,6 +27,8 @@ class Application:
                 States.SUBJECT_SELECTION: [list_subjects_handler],
                 States.NOTE_SELECTION: [list_notes_handler],
                 States.PURCHASE_CONFIRMATION: [buy_note_handler],
+                States.NOTE_UPLOAD_PROMPT: [prompt_upload_note_handler],
+                States.NOTE_UPLOAD: [upload_note_handler],
             },
             fallbacks=[cancel_handler],
             per_user=True,

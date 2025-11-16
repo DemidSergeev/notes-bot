@@ -14,5 +14,6 @@ class SellService(SellServicePort):
             title=title,
             price_rub=price_rub
         )
+        file.seek(0)
         self._note_repo.save(note, subject_id)
         self._note_storage.save(note, file)

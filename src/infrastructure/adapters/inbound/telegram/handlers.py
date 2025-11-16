@@ -1,3 +1,7 @@
+import random
+import logging
+import io
+import traceback
 from enum import Enum
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
@@ -6,6 +10,9 @@ from src.core.application.ports.inbound import PurchaseServicePort, DataServiceP
 from src.core.domain.models import User
 from src.core.domain.common.enums import StartActions, CourseYear
 
+from src.infrastructure.config import settings
+
+logger = logging.getLogger(settings.LOGGER_NAME)
 
 class States(Enum):
     START = 1
@@ -133,7 +140,7 @@ class TelegramHandlers:
         await query.message.reply_text(reply)
         return States.NOTE_UPLOAD
 
-    async def upload_note_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    async def upload_note_handler(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         # 1. Check for the file (document is preferred)
         document = update.message.document
         if not document:
@@ -143,26 +150,31 @@ class TelegramHandlers:
 
         # 2. Retrieve necessary data from context and user
         subject_id = context.user_data.get("subject_id")
-        user = update.effective_user
-        seller = User(external_id=user.id, name=user.full_name)
+        # user = update.effective_user
+        # seller = User(external_id=user.id, name=user.full_name)
         
-        document.get_bot().get_file(document.file_id)
         try:
+            bot = context.bot
+            file_handler = await bot.get_file(document.file_id)
+            file = io.BytesIO()
+            await file_handler.download_to_memory(file)
             self._sell_service.upload_note(
                 title=document.file_name,
-                subject_id=subject_id
+                price_rub=random.randint(50, 300),
+                subject_id=subject_id,
+                file=file,
             )
             
             # 4. Confirm and clear context
             await update.message.reply_text(
-                f"Спасибо, {document.file_name} отправлен(а) на модерацию! Мы свяжемся с вами после проверки."
+                f"Спасибо, файл {document.file_name} отправлен на модерацию! Мы свяжемся с вами после проверки."
             )
             context.user_data.clear()
             # Clear context and return to the entry state
             return States.START
 
-        except Exception as e:
+        except Exception:
             # Handle potential errors during service call (e.g., storage failure)
-            print(f"Error uploading note: {e}")
+            logger.error(f"Error uploading note: {traceback.format_exc()}")
             await update.message.reply_text("Произошла ошибка при загрузке. Попробуйте ещё раз.")
             return States.NOTE_UPLOAD

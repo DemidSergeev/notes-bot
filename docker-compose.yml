@@ -9,6 +9,10 @@ services:
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
       - POSTGRES_DB=notes
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=admin
+      - MINIO_SECRET_KEY=admin123
+      - MINIO_BUCKET=notes
       - TELEGRAM_BOT_TOKEN=8299540683:AAF9cIRS7LQk-6sAx9VAxvCgg12CdE7eZmU
     depends_on:
       - db
@@ -29,8 +33,24 @@ services:
     networks:
       - notes-network
 
+  minio:
+    image: minio/minio@sha256:a1ea29fa28355559ef137d71fc570e508a214ec84ff8083e39bc5428980b015e
+    container_name: notes-minio
+    command: ["minio", "server", "/mnt/minio", "--console-address", ":9001"]
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=admin123
+    volumes:
+      - minio_data:/mnt/minio
+    networks:
+      - notes-network
+
 volumes:
   db_data:
+  minio_data:
 
 networks:
   notes-network:

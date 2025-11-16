@@ -28,7 +28,8 @@ class MinioNoteStorage(NoteStoragePort):
         result = self._client.put_object(
             bucket_name=self._bucket,
             object_name=str(note.id),
-            data=file
+            data=file,
+            length=len(file.getvalue()),
         )
 
     def delete(self, note_id):
