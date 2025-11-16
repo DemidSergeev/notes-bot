@@ -18,10 +18,10 @@ class Application:
         cancel_handler = CommandHandler("cancel", self._telegram_handlers.cancel_command)
 
         list_courses_handler = CallbackQueryHandler(self._telegram_handlers.list_courses_callback, pattern=r"^(buy|sell)$")
-        list_subjects_handler = CallbackQueryHandler(self._telegram_handlers.list_subjects_callback, pattern=r"^(buy|sell)/course/\d+$")
-        list_notes_handler = CallbackQueryHandler(self._telegram_handlers.list_notes_callback, pattern=fr"^buy/subject/{regex_uuid}$")
-        buy_note_handler = CallbackQueryHandler(self._telegram_handlers.buy_note_callback, pattern=fr"^buy/note/{regex_uuid}$")
-        prompt_upload_note_handler = CallbackQueryHandler(self._telegram_handlers.prompt_upload_note_callback, pattern=fr"^sell/subject/{regex_uuid}$")
+        list_subjects_handler = CallbackQueryHandler(self._telegram_handlers.list_subjects_callback, pattern=r"^course/\d+$")
+        list_notes_handler = CallbackQueryHandler(self._telegram_handlers.list_notes_callback, pattern=fr"^subject/{regex_uuid}$")
+        buy_note_handler = CallbackQueryHandler(self._telegram_handlers.buy_note_callback, pattern=fr"^note/{regex_uuid}$")
+        prompt_upload_note_handler = CallbackQueryHandler(self._telegram_handlers.prompt_upload_note_callback, pattern=fr"^subject/{regex_uuid}$")
 
         upload_note_handler = MessageHandler(filters.Document.ALL, self._telegram_handlers.upload_note_handler)
 
@@ -38,6 +38,7 @@ class Application:
             fallbacks=[cancel_handler],
             per_user=True,
             per_chat=False,
+            allow_reentry=True,
         )
 
         self._application.add_handler(conversation_handler)
