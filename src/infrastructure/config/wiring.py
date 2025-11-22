@@ -7,7 +7,7 @@ from src.infrastructure.adapters.outbound.payment_details_provider import Config
 from src.infrastructure.adapters.inbound.telegram import TelegramHandlers
 from src.infrastructure.adapters.inbound.telegram import Application
 from src.infrastructure.config.database import get_session
-from src.infrastructure.config.storage import get_client
+from src.infrastructure.config.storage import get_client, get_url_signer_client
 from src.infrastructure.config import settings
 
 
@@ -18,7 +18,7 @@ subject_repo = SqlModelSubjectRepository(session_factory=get_session, note_repos
 course_repo = SqlModelCourseRepository(session_factory=get_session, subject_repository=subject_repo)
 purchase_receipt_repo = SqlModelPurchaseReceiptRepository(session_factory=get_session)
 
-note_storage = MinioNoteStorage(client=get_client(), bucket=settings.MINIO_BUCKET)
+note_storage = MinioNoteStorage(client=get_client(), bucket=settings.MINIO_BUCKET, url_signer_client=get_url_signer_client())
 
 logger.debug("Repositories and storage wiring complete")
 

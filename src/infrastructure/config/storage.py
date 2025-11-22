@@ -14,8 +14,16 @@ client = Minio(
     secret_key=settings.MINIO_SECRET_KEY,
     secure=False,
 )
-bucket = settings.MINIO_BUCKET
 
+url_signer_client = Minio(
+    endpoint=settings.MINIO_EXTERNAL_ENDPOINT,
+    access_key=settings.MINIO_ACCESS_KEY,
+    secret_key=settings.MINIO_SECRET_KEY,
+    secure=False,
+    region="us-east-1"
+)
+
+bucket = settings.MINIO_BUCKET
 def create_bucket():
     found = client.bucket_exists(bucket)
     logger.debug("Bucket '%s' already exists", bucket)
@@ -25,3 +33,6 @@ def create_bucket():
 
 def get_client() -> Minio:
     return client
+
+def get_url_signer_client() -> Minio:
+    return url_signer_client
