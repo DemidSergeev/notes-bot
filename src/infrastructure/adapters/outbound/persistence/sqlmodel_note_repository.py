@@ -54,8 +54,9 @@ class SqlModelNoteRepository(NoteRepositoryPort):
         with self._session_factory() as session:
             session: Session
 
-            statement = select(DbNote).where(not DbNote.is_approved)
+            statement = select(DbNote).where(DbNote.is_approved.is_(False))
             db_notes = session.exec(statement).all()
+            logger.debug("Retrieved %d not approved notes from DB", len(db_notes))
 
             return [
                 Note(
