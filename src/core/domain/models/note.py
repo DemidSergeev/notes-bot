@@ -8,3 +8,6 @@ class Note(BaseModel):
     title: str
     price_rub: int
     is_approved: bool = False
+
+    def __hash__(self):
+        return hash(self.id)
