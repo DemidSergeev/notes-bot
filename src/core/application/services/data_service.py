@@ -38,6 +38,14 @@ class DataService(DataServicePort):
 
         return subject.notes
 
+    def get_not_approved_notes(self):
+        notes = self._note_repo.get_not_approved()
+
+        if not notes:
+            logger.debug("No not approved notes found")
+
+        return notes
+
     def get_note_file(self, note_id):
         note = self._note_repo.get_by_id(note_id)
         
@@ -52,3 +60,18 @@ class DataService(DataServicePort):
         logger.debug("Retrieved note %s (UUID %s) from storage", note.title, note.id)
 
         return note_file 
+
+    def get_note_url(self, note_id):
+        note = self._note_repo.get_by_id(note_id)
+        
+        if not note:
+            raise ValueError(f"Note with id {note_id} does not exist.")
+
+        note_url = self._note_storage.get_url(note.id, note.title)
+
+        if not note_url:
+            raise ValueError(f"Note URL with id {note.id} does not exist in storage.")
+
+        logger.debug("Retrieved note URL %s (title %s, UUID %s) from storage", note_url, note.title, note.id)
+
+        return note_url
