@@ -11,6 +11,9 @@ class NoteRepositoryPort(Protocol):
     def get_by_title(self, title: str) -> Note | None:
         raise NotImplementedError
 
+    def get_approved_by_subject_id(self, subject_id: uuid.UUID) -> list[Note]:
+        raise NotImplementedError
+
     def get_not_approved(self) -> list[Note]:
         raise NotImplementedError
 

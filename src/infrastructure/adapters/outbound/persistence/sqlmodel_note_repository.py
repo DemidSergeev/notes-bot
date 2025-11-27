@@ -49,7 +49,25 @@ class SqlModelNoteRepository(NoteRepositoryPort):
                 price_rub=db_note.price_rub,
                 is_approved=db_note.is_approved
             )
- 
+
+    def get_approved_by_subject_id(self, subject_id: uuid.UUID) -> list[Note]:
+        with self._session_factory() as session:
+            session: Session
+
+            statement = select(DbNote).where(DbNote.is_approved.is_(True), DbNote.subject_id == subject_id)
+            db_notes = session.exec(statement).all()
+            logger.debug("Retrieved %d approved notes with subject_id %s from DB", len(db_notes), subject_id)
+
+            return [
+                Note(
+                    id=db_note.id,
+                    title=db_note.title,
+                    price_rub=db_note.price_rub,
+                    is_approved=db_note.is_approved
+                )
+                for db_note in db_notes
+            ]
+
     def get_not_approved(self) -> list[Note]:
         with self._session_factory() as session:
             session: Session

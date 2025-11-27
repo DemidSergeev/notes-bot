@@ -15,6 +15,9 @@ class DataServicePort(Protocol):
     def get_notes(self, subject_id: uuid.UUID) -> list[Note]:
         raise NotImplementedError
 
+    def get_approved_notes_by_subject_id(self, subject_id: uuid.UUID) -> list[Note]:
+        raise NotImplementedError
+
     def get_not_approved_notes(self) -> list[Note]:
         raise NotImplementedError
 

@@ -184,7 +184,7 @@ class TelegramHandlers:
             case "sell":
                 return UserStates.NOTE_UPLOAD_PROMPT
 
-    async def list_notes_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    async def list_approved_notes_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         query = update.callback_query
         await query.answer()
 
@@ -195,7 +195,7 @@ class TelegramHandlers:
         subject_id = data_parts[1]
         context.user_data["subject_id"] = uuid.UUID(subject_id)
 
-        notes = self._data_service.get_notes(subject_id)
+        notes = self._data_service.get_approved_notes_by_subject_id(subject_id)
         reply = "Выберите конспект:\n"
 
         buttons = [

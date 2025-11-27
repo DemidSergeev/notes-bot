@@ -38,6 +38,14 @@ class DataService(DataServicePort):
 
         return subject.notes
 
+    def get_approved_notes_by_subject_id(self, subject_id):
+        notes = self._note_repo.get_approved_by_subject_id(subject_id)
+
+        if not notes:
+            logger.debug("No approved notes found")
+
+        return notes
+
     def get_not_approved_notes(self):
         notes = self._note_repo.get_not_approved()
 
