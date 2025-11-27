@@ -14,10 +14,11 @@ class Application:
     def setup(self) -> None:
         regex_uuid = r"[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}"
 
-        # User commands
+        # --- User Flow Handlers ---
         start_handler = CommandHandler("start", self._telegram_handlers.start_command)
         cancel_handler = CommandHandler("cancel", self._telegram_handlers.cancel_command)
 
+        # Forward Navigation
         list_courses_handler = CallbackQueryHandler(self._telegram_handlers.list_courses_callback, pattern=r"^(buy|sell)$")
         list_subjects_handler = CallbackQueryHandler(self._telegram_handlers.list_subjects_callback, pattern=r"^course/\d+$")
         list_approved_notes_handler = CallbackQueryHandler(self._telegram_handlers.list_approved_notes_callback, pattern=fr"^subject/{regex_uuid}$")
@@ -26,15 +27,37 @@ class Application:
 
         upload_note_handler = MessageHandler(filters.Document.ALL, self._telegram_handlers.upload_note_handler)
 
+        # Backward Navigation (The Back Buttons)
+        back_to_start_handler = CallbackQueryHandler(self._telegram_handlers.back_to_start_callback, pattern=r"^back_to_start$")
+        back_to_courses_handler = CallbackQueryHandler(self._telegram_handlers.back_to_courses_callback, pattern=r"^back_to_courses$")
+        back_to_subjects_handler = CallbackQueryHandler(self._telegram_handlers.back_to_subjects_callback, pattern=r"^back_to_subjects$")
+
         user_conversation_handler = ConversationHandler(
             entry_points=[start_handler],
             states={
-                UserStates.COURSE_SELECTION: [list_courses_handler],
-                UserStates.SUBJECT_SELECTION: [list_subjects_handler],
-                UserStates.NOTE_SELECTION: [list_approved_notes_handler],
-                UserStates.PURCHASE_CONFIRMATION: [buy_note_handler],
-                UserStates.NOTE_UPLOAD_PROMPT: [prompt_upload_note_handler],
-                UserStates.NOTE_UPLOAD: [upload_note_handler],
+                UserStates.COURSE_SELECTION: [
+                    list_courses_handler
+                ],
+                UserStates.SUBJECT_SELECTION: [
+                    list_subjects_handler,
+                    back_to_start_handler
+                ],
+                UserStates.NOTE_SELECTION: [
+                    list_approved_notes_handler,
+                    back_to_courses_handler
+                ],
+                UserStates.PURCHASE_CONFIRMATION: [
+                    buy_note_handler,
+                    back_to_subjects_handler
+                ],
+                UserStates.NOTE_UPLOAD_PROMPT: [
+                    prompt_upload_note_handler,
+                    back_to_courses_handler
+                ],
+                UserStates.NOTE_UPLOAD: [
+                    upload_note_handler,
+                    back_to_subjects_handler
+                ],
             },
             fallbacks=[cancel_handler],
             per_user=True,
@@ -43,9 +66,9 @@ class Application:
         )
 
         self._application.add_handler(user_conversation_handler)
-        logger.debug("Conversation handler added")
+        logger.debug("User conversation handler added")
 
-        # Review commands
+        # --- Review Flow Handlers ---
         start_review_handler = CommandHandler("review", self._telegram_handlers.start_review_command)
 
         review_note_handler = CallbackQueryHandler(self._telegram_handlers.review_note_callback, pattern=fr"^review/{regex_uuid}$")
@@ -64,7 +87,7 @@ class Application:
             allow_reentry=True,
         )
         self._application.add_handler(review_conversation_handler)
-        logger.debug("Review handler added")
+        logger.debug("Review conversation handler added")
 
     def run(self) -> None:
         self._application.run_polling()
