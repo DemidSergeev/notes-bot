@@ -75,14 +75,20 @@ class SqlModelCourseRepository(CourseRepositoryPort):
         with self._session_factory() as session:
             session: Session
 
-            db_course = DbCourse(id=course.id, year=course.year.value)
-            session.add(db_course)
+            db_course = session.get(DbCourse, course.id)
+            if db_course:
+                db_course.id = course.id
+                db_course.year = course.year.value
+                logger.debug("Course %d (UUID %s) updated in DB", course.year, course.id)
+            else:
+                db_course = DbCourse(id=course.id, year=course.year.value)
+                session.add(db_course)
+                logger.debug("Course %d (UUID %s) added to DB", course.year, course.id)
             session.commit()
 
             for subject in course.subjects:
                 self._subject_repository.save(subject, course.id)
 
-            logger.debug("Course %d (UUID %s) saved in DB", course.year, course.id)
 
 
     def delete(self, course_id: uuid.UUID) -> None:

@@ -46,17 +46,26 @@ class SqlModelPurchaseReceiptRepository(PurchaseReceiptRepositoryPort):
         with self._session_factory() as session:
             session: Session
 
-            db_purchase_receipt = DbPurchaseReceipt(
-                id=purchase_receipt.id,
-                buyer_id=purchase_receipt.buyer.external_id,
-                buyer_name=purchase_receipt.buyer.name,
-                payment_details=purchase_receipt.payment_details,
-                note_id=purchase_receipt.note.id
-            )
+            db_purchase_receipt = session.get(DbPurchaseReceipt, purchase_receipt.id)
+            if db_purchase_receipt:
+                db_purchase_receipt.id = purchase_receipt.id
+                db_purchase_receipt.buyer_id = purchase_receipt.buyer.external_id
+                db_purchase_receipt.buyer_name = purchase_receipt.buyer.name
+                db_purchase_receipt.payment_details = purchase_receipt.payment_details
+                db_purchase_receipt.note_id = purchase_receipt.note.id
+                logger.debug("Purchase receipt (UUID %s) updated in DB", purchase_receipt.id)
+            else:
+                db_purchase_receipt = DbPurchaseReceipt(
+                    id=purchase_receipt.id,
+                    buyer_id=purchase_receipt.buyer.external_id,
+                    buyer_name=purchase_receipt.buyer.name,
+                    payment_details=purchase_receipt.payment_details,
+                    note_id=purchase_receipt.note.id
+                )
+                session.add(db_purchase_receipt)
+                logger.debug("Purchase receipt (UUID %s) added to DB", purchase_receipt.id)
 
-            session.add(db_purchase_receipt)
             session.commit()
-            logger.debug("Purchase receipt (UUID %s) saved in DB", purchase_receipt.id)
             logger.debug(
                 "Purchase receipt details: buyer %s (ext. ID %s), note %s (UUID %s)",
                 purchase_receipt.buyer.name,

@@ -91,20 +91,26 @@ class SqlModelNoteRepository(NoteRepositoryPort):
             session: Session
 
             db_note = session.get(DbNote, note.id)
-            if db_note and not subject_id:
-                subject_id = db_note.subject_id
+            if db_note:
+                db_note.id = note.id
+                db_note.title = note.title
+                db_note.price_rub = note.price_rub
+                db_note.is_approved = note.is_approved
+                if subject_id:
+                    db_note.subject_id = subject_id
+                logger.debug("Note %s (UUID %s) updated in DB", note.title, note.id)
+            else:
+                db_note = DbNote(
+                    id=note.id,
+                    title=note.title,
+                    price_rub=note.price_rub,
+                    is_approved=note.is_approved,
+                    subject_id=subject_id
+                )
+                session.add(db_note)
+                logger.debug("Note %s (UUID %s) added to DB", note.title, note.id)
 
-            db_note = DbNote(
-                id=note.id,
-                title=note.title,
-                price_rub=note.price_rub,
-                is_approved=note.is_approved,
-                subject_id=subject_id
-            )
-
-            session.add(db_note)
             session.commit()
-            logger.debug("Note %s (UUID %s) saved in DB", note.title, note.id)
 
     def delete(self, note_id: uuid.UUID) -> None:
         with self._session_factory() as session:

@@ -54,18 +54,23 @@ class SqlModelSubjectRepository(SubjectRepositoryPort):
         with self._session_factory() as session:
             session: Session
 
-            db_subject = DbSubject(
-                id=subject.id,
-                name=subject.name,
-                course_id=course_id
-            )
-            session.add(db_subject)
+            db_subject = session.get(DbSubject, subject.id)
+            if db_subject:
+                db_subject.name = subject.name
+                db_subject.course_id = course_id
+                logger.debug("Subject %s (UUID %s) updated in DB", subject.name, subject.id)
+            else:
+                db_subject = DbSubject(
+                    id=subject.id,
+                    name=subject.name,
+                    course_id=course_id
+                )
+                session.add(db_subject)
+                logger.debug("Subject %s (UUID %s) added to DB", subject.name, subject.id)
             session.commit()
 
             for note in subject.notes:
                 self._note_repository.save(note, subject.id)
-            
-            logger.debug("Subject %s (UUID %s) saved in DB", subject.name, subject.id)
 
 
     def delete(self, subject_id: uuid.UUID) -> None:
