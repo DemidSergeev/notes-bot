@@ -8,7 +8,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 from telegram.constants import ParseMode
 
-from src.core.application.ports.inbound import PurchaseServicePort, DataServicePort, SellServicePort
+from src.core.application.ports.inbound import DataServicePort, PurchaseServicePort, SellServicePort, ReviewServicePort
 from src.core.domain.models import User
 from src.core.domain.common.enums import StartActions, CourseYear
 
@@ -32,14 +32,16 @@ class ReviewStates(Enum):
 class TelegramHandlers:
     def __init__(
         self,
-        purchase_service: PurchaseServicePort,
         data_service: DataServicePort,
+        purchase_service: PurchaseServicePort,
         sell_service: SellServicePort,
+        review_service: ReviewServicePort,
         welcome_message: str
         ) -> None:
-        self._purchase_service = purchase_service
         self._data_service = data_service
+        self._purchase_service = purchase_service
         self._sell_service = sell_service
+        self._review_service = review_service
         self._welcome_message = welcome_message
 
     # --- HELPER METHODS FOR RENDERING MENUS ---
@@ -339,7 +341,7 @@ class TelegramHandlers:
             InlineKeyboardButton(text="Отклонить", callback_data=f"reject/{note_id}")
         ]
 
-        await query.message.edit_text("Просмотрите конспект и выберите действие:", reply_markup=InlineKeyboardMarkup([buttons]))
+        await query.message.reply_text("Просмотрите конспект и выберите действие:", reply_markup=InlineKeyboardMarkup([buttons]))
 
         return ReviewStates.NOTE_DECISION
 
@@ -352,7 +354,7 @@ class TelegramHandlers:
             return
 
         note_id = data_parts[1]
-        self._purchase_service.approve_note(note_id)
+        self._review_service.approve_note(note_id)
 
         await query.message.edit_text("Конспект одобрен и опубликован.")
         return ReviewStates.END
@@ -369,7 +371,7 @@ class TelegramHandlers:
         # In a real scenario, you might want to get the reason from the moderator
         reason = "Не соответствует требованиям."
         # Assuming we can find the owner via the note ID in the service, or passing None if not required immediately
-        self._purchase_service.reject_note(note_id=note_id, reason=reason)
+        self._review_service.reject_note(note_id=note_id, reason=reason)
 
         await query.message.edit_text("Конспект отклонён и удалён.")
         return ReviewStates.END

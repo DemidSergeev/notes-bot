@@ -1,6 +1,6 @@
 import logging
 
-from src.core.application.services import PurchaseService, DataService, SellService
+from src.core.application.services import PurchaseService, DataService, SellService, ReviewService
 from src.infrastructure.adapters.outbound.persistence import SqlModelCourseRepository, SqlModelSubjectRepository, SqlModelNoteRepository, SqlModelPurchaseReceiptRepository
 from src.infrastructure.adapters.outbound.storage import MinioNoteStorage
 from src.infrastructure.adapters.outbound.payment_details_provider import ConfigPaymentDetailsProvider
@@ -40,12 +40,18 @@ sell_service = SellService(
     note_storage=note_storage
 )
 
+review_service = ReviewService(
+    note_repo=note_repo,
+    note_storage=note_storage
+)
+
 logger.debug("Services wiring complete")
 
 telegram_handlers = TelegramHandlers(
-    purchase_service=purchase_service,
     data_service=data_service,
+    purchase_service=purchase_service,
     sell_service=sell_service,
+    review_service=review_service,
     welcome_message="Добро пожаловать в бот по покупке конспектов!"
 )
 
