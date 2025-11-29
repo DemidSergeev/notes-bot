@@ -15,6 +15,7 @@ services:
       - MINIO_SECRET_KEY=admin123
       - MINIO_BUCKET=notes
       - TELEGRAM_BOT_TOKEN=8299540683:AAF9cIRS7LQk-6sAx9VAxvCgg12CdE7eZmU
+      - TELEGRAM_ADMIN_IDS=[768909387]
     depends_on:
       - db
     networks:

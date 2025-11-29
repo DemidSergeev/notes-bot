@@ -52,7 +52,8 @@ telegram_handlers = TelegramHandlers(
     purchase_service=purchase_service,
     sell_service=sell_service,
     review_service=review_service,
-    welcome_message="Добро пожаловать в бот по покупке конспектов!"
+    welcome_message="Добро пожаловать в бот по покупке конспектов!",
+    admin_ids=settings.TELEGRAM_ADMIN_IDS
 )
 
 logger.debug("Telegram handlers wiring complete")

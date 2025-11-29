@@ -33,17 +33,17 @@ class Settings(BaseSettings):
     MINIO_SECRET_KEY: str
     MINIO_BUCKET: str
 
-    # TELEGRAM_ADMIN_ID: int
+    TELEGRAM_ADMIN_IDS: list[int]
     TELEGRAM_BOT_TOKEN: str
 
-    # @computed_field
-    # @property
-    # def TELEGRAM_WELCOME_MESSAGE(self) -> str:
-    #     welcome_message_file_path = pathlib.Path(__file__).parent.parent.parent / "assets" / "welcome.txt"
-    #     if welcome_message_file_path.exists():
-    #         with open(welcome_message_file_path) as f:
-    #             return f.read()
-    #     return "Welcome to the Notes Bot!"
+    @computed_field
+    @property
+    def TELEGRAM_WELCOME_MESSAGE(self) -> str:
+        welcome_message_file_path = pathlib.Path(__file__).parent.parent.parent / "assets" / "welcome.txt"
+        if welcome_message_file_path.exists():
+            with open(welcome_message_file_path) as f:
+                return f.read()
+        return "Welcome to the Notes Bot!"
 
     PAYMENT_DETAILS: str = "6666 6666 6666 6666"
 

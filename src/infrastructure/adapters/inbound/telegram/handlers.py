@@ -36,13 +36,15 @@ class TelegramHandlers:
         purchase_service: PurchaseServicePort,
         sell_service: SellServicePort,
         review_service: ReviewServicePort,
-        welcome_message: str
+        welcome_message: str,
+        admin_ids: list[int],
         ) -> None:
         self._data_service = data_service
         self._purchase_service = purchase_service
         self._sell_service = sell_service
         self._review_service = review_service
         self._welcome_message = welcome_message
+        self._admin_ids = admin_ids
 
     # --- HELPER METHODS FOR RENDERING MENUS ---
 
@@ -288,6 +290,10 @@ class TelegramHandlers:
     # --- REVIEW HANDLERS ---
 
     async def start_review_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if update.effective_user.id not in self._admin_ids:
+            await update.message.reply_text("У вас нет прав для этой команды.")
+            return ConversationHandler.END
+
         not_approved_notes = self._data_service.get_not_approved_notes()
 
         if not not_approved_notes:
