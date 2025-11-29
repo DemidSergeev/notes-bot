@@ -113,6 +113,7 @@ class Application:
                 ],
                 DbControlStates.SUBJECT_ADDITION: [
                     subject_addition_handler,
+                    back_to_courses_from_db_handler
                 ],
                 DbControlStates.SUBJECT_ADDITION_CONFIRMATION: [
                     subject_addition_confirmation_handler,

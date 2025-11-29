@@ -433,8 +433,16 @@ class TelegramHandlers:
         course_year = CourseYear(int(data_parts[1]))
         context.user_data["course_year"] = course_year
 
-        reply = f"Введите название предмета для добавления на {course_year.value}-й курс:"
-        buttons = [InlineKeyboardButton(text="« Назад", callback_data="back_to_start")]
+        subjects = self._data_service.get_subjects(course_year)
+        if not subjects:
+            reply = f"На {course_year.value}-м курсе ещё нет предметов."
+        else:
+            reply = f"Существующие предметы на {course_year.value}-м курсе:\n"
+            for subject in subjects:
+                reply += f"• {subject.name}\n"
+
+        reply += f"\nВведите название предмета для добавления на {course_year.value}-й курс:"
+        buttons = [InlineKeyboardButton(text="« Назад к курсам", callback_data="back_to_courses")]
 
         await query.message.edit_text(reply, reply_markup=InlineKeyboardMarkup([buttons]))
         return DbControlStates.SUBJECT_ADDITION
