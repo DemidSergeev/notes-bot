@@ -30,6 +30,13 @@ class ReviewStates(Enum):
     NOTE_REVIEW = 1
     NOTE_DECISION = 2
 
+class DbControlStates(Enum):
+    END = ConversationHandler.END
+    SUBJECT_PROMPT = 1
+    SUBJECT_ADDITION = 2
+    SUBJECT_ADDITION_CONFIRMATION = 3
+    REPEAT_ADD_SUBJECT_CHECK = 4
+
 class TelegramHandlers:
     def __init__(
         self,
@@ -76,12 +83,14 @@ class TelegramHandlers:
             buttons.append([InlineKeyboardButton(text=f"Курс {course.year.value}", callback_data=f"course/{course.year.value}")])
         
         # Add Back button
-        buttons.append([InlineKeyboardButton(text="« Назад", callback_data="back_to_start")])
+        buttons.append([InlineKeyboardButton(text="« Назад в главное меню", callback_data="back_to_start")])
 
-        await update.callback_query.message.edit_text(
-            reply if courses else "Курсы ещё не добавили :(", 
-            reply_markup=InlineKeyboardMarkup(buttons)
-        )
+        keyboard = InlineKeyboardMarkup(buttons)
+        text = reply if courses else "Курсы ещё не добавили :("
+        if update.callback_query:
+            await update.callback_query.message.edit_text(text, reply_markup=keyboard)
+        elif update.message:
+            await update.message.reply_text(text, reply_markup=keyboard)
 
     async def _render_subjects_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         course_year = context.user_data.get("course_year")
@@ -98,7 +107,7 @@ class TelegramHandlers:
             buttons.append([InlineKeyboardButton(text=subject.name, callback_data=f"subject/{subject.id}")])
 
         # Add Back button
-        buttons.append([InlineKeyboardButton(text="« Назад", callback_data="back_to_courses")])
+        buttons.append([InlineKeyboardButton(text="« Назад к курсам", callback_data="back_to_courses")])
 
         await update.callback_query.message.edit_text(
             reply if subjects else "Предметы по этому курсу ещё не добавили :(", 
@@ -168,7 +177,7 @@ class TelegramHandlers:
             case StartActions.ABOUT.value.code:
                 logger.debug("User %s (ID %s) requested 'About us' information", update.effective_user.full_name, update.effective_user.id)
 
-                buttons = [[InlineKeyboardButton(text="« Назад", callback_data="back_to_start")]]
+                buttons = [[InlineKeyboardButton(text="« Назад к главному меню", callback_data="back_to_start")]]
                 keyboard = InlineKeyboardMarkup(buttons)
                 
                 await query.message.edit_text(self._about_us_message, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN_V2)
@@ -227,7 +236,7 @@ class TelegramHandlers:
             buttons.append([InlineKeyboardButton(text=note.title, callback_data=f"note/{note.id}")])
         
         # Add Back button
-        buttons.append([InlineKeyboardButton(text="« Назад", callback_data="back_to_subjects")])
+        buttons.append([InlineKeyboardButton(text="« Назад к предметам", callback_data="back_to_subjects")])
 
         await query.message.edit_text(reply if len(buttons) > 1 else "Конспекты по этому предмету ещё не добавили :(", reply_markup=InlineKeyboardMarkup(buttons))
 
@@ -251,7 +260,7 @@ class TelegramHandlers:
 
         # Here we provide a button to go back to the note list if they change their mind, 
         # or we could end the conversation. 
-        buttons = [[InlineKeyboardButton(text="« Вернуться к списку", callback_data="back_to_subjects")]]
+        buttons = [[InlineKeyboardButton(text="« Назад к конспектам", callback_data="back_to_subjects")]]
 
         await query.message.edit_text(
             f"Создана заявка на покупку конспекта.\nРеквизиты для оплаты конспекта: {receipt.payment_details}",
@@ -273,7 +282,7 @@ class TelegramHandlers:
         context.user_data["subject_id"] = subject_id
 
         reply = "Загрузите файл конспекта."
-        buttons = [[InlineKeyboardButton(text="« Назад", callback_data="back_to_subjects")]]
+        buttons = [[InlineKeyboardButton(text="« Назад к предметам", callback_data="back_to_subjects")]]
 
         await query.message.edit_text(reply, reply_markup=InlineKeyboardMarkup(buttons))
         return UserStates.NOTE_UPLOAD
@@ -406,3 +415,80 @@ class TelegramHandlers:
 
         await query.message.edit_text("Конспект отклонён и удалён.")
         return ReviewStates.END
+
+    # --- ADMIN DB HANDLERS ---
+    async def add_subject_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        if update.effective_user.id not in self._admin_ids:
+            await update.message.reply_text("У вас нет прав для этой команды.")
+            return
+        
+        await self._render_courses_menu(update, context)
+        return DbControlStates.SUBJECT_PROMPT
+    
+    async def subject_prompt_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        query = update.callback_query
+        await query.answer()
+
+        data_parts = query.data.split("/")
+        if len(data_parts) != 2 or data_parts[0] != "course":
+            return
+
+        course_year = CourseYear(int(data_parts[1]))
+        context.user_data["course_year"] = course_year
+
+        reply = f"Введите название предмета для добавления на {course_year.value}-й курс:"
+        buttons = [InlineKeyboardButton(text="« Назад", callback_data="back_to_start")]
+
+        await query.message.edit_text(reply, reply_markup=InlineKeyboardMarkup([buttons]))
+        return DbControlStates.SUBJECT_ADDITION
+
+    async def subject_addition_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        subject_name = update.message.text
+        course_year = context.user_data.get("course_year")
+
+        reply = f'Предмет "{subject_name}" будет добавлен на {course_year.value}-й курс.\n'
+        buttons = [
+            InlineKeyboardButton(text="Подтвердить", callback_data=f"confirm_add_subject/{subject_name}"),
+            InlineKeyboardButton(text="Отменить", callback_data="back_to_courses")
+        ]
+
+        await update.message.reply_text(reply, reply_markup=InlineKeyboardMarkup([buttons]))
+        return DbControlStates.SUBJECT_ADDITION_CONFIRMATION
+
+    async def subject_addition_confirmation_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        query = update.callback_query
+        await query.answer()
+
+        data_parts = query.data.split("/")
+        if len(data_parts) != 2 or data_parts[0] != "confirm_add_subject":
+            return
+
+        subject_name = data_parts[1]
+        course_year = context.user_data.get("course_year")
+
+        try:
+            new_subject = self._data_service.add_subject(course_year=course_year, name=subject_name)
+
+            buttons = [
+                [InlineKeyboardButton(text="Добавить ещё", callback_data=f"course/{course_year.value}")],
+                [InlineKeyboardButton(text="« Назад", callback_data="back_to_courses")]
+            ]
+
+            await query.message.edit_text(
+                f'Предмет "{new_subject.name}" успешно добавлен на {course_year.value}-й курс!',
+                reply_markup=InlineKeyboardMarkup(buttons)
+            )
+
+            return DbControlStates.REPEAT_ADD_SUBJECT_CHECK
+
+        except Exception:
+            logger.exception("Error adding subject")
+            await query.message.edit_text("Произошла ошибка при добавлении предмета. Попробуйте ещё раз.")
+            return DbControlStates.SUBJECT_ADDITION 
+
+    async def back_to_courses_from_db_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        query = update.callback_query
+        await query.answer()
+        context.user_data.pop("course_year", None)
+        await self._render_courses_menu(update, context)
+        return DbControlStates.SUBJECT_PROMPT

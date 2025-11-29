@@ -1,4 +1,6 @@
 import logging
+
+from src.core.domain.models import Subject
 from ..ports.inbound import DataServicePort
 from ..ports.outbound.persistence import CourseRepositoryPort, SubjectRepositoryPort, NoteRepositoryPort
 from ..ports.outbound.storage import NoteStoragePort
@@ -18,6 +20,8 @@ class DataService(DataServicePort):
         self._subject_repo = subject_repo
         self._note_repo = note_repo
         self._note_storage = note_storage
+
+    # Get entities
 
     def get_courses(self):
         return self._course_repo.get_all()
@@ -83,3 +87,43 @@ class DataService(DataServicePort):
         logger.debug("Retrieved note URL %s (title %s, UUID %s) from storage", note_url, note.title, note.id)
 
         return note_url
+
+    # Create/update entities
+
+    def add_subject(self, course_year, name):  
+        course = self._course_repo.get_by_year(course_year)
+
+        if not course:
+            raise ValueError(f"Course for year {course_year} does not exist.")
+
+        subject = Subject(
+            name=name
+        )
+
+        self._subject_repo.save(subject, course.id)
+
+        logger.debug("Added subject %s to course year %d", subject.name, course.year.value)
+
+        return subject
+
+    # Delete entities
+
+    def delete_subject(self, subject_id):
+        subject = self._subject_repo.get_by_id(subject_id)
+
+        if not subject:
+            raise ValueError(f"Subject with id {subject_id} does not exist.")
+
+        self._subject_repo.delete(subject_id)
+
+        logger.debug("Deleted subject %s (UUID %s)", subject.name, subject.id)
+
+    def delete_note(self, note_id):
+        note = self._note_repo.get_by_id(note_id)
+
+        if not note:
+            raise ValueError(f"Note with id {note_id} does not exist.")
+
+        self._note_repo.delete(note_id)
+
+        logger.debug("Deleted note %s (UUID %s)", note.title, note.id)

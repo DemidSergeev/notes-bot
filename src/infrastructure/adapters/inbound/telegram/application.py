@@ -1,7 +1,7 @@
 import logging
 from telegram.ext import ApplicationBuilder, ConversationHandler, CommandHandler, CallbackQueryHandler, MessageHandler, filters
 
-from .handlers import TelegramHandlers, UserStates, ReviewStates
+from .handlers import TelegramHandlers, UserStates, ReviewStates, DbControlStates
 
 
 logger = logging.getLogger(__name__)
@@ -93,6 +93,44 @@ class Application:
         )
         self._application.add_handler(review_conversation_handler)
         logger.debug("Review conversation handler added")
+
+        # --- Admin DB Handlers ---
+        add_subject_handler = CommandHandler("add", self._telegram_handlers.add_subject_command)
+
+        # Forward Navigation for Admin DB Handlers
+        subject_prompt_handler = CallbackQueryHandler(self._telegram_handlers.subject_prompt_callback, pattern=r"^course/\d+$")
+        subject_addition_handler = MessageHandler(filters.TEXT & ~filters.COMMAND, self._telegram_handlers.subject_addition_callback)
+        subject_addition_confirmation_handler = CallbackQueryHandler(self._telegram_handlers.subject_addition_confirmation_callback, pattern=fr"^confirm_add_subject/.*$")
+
+        # Backward Navigation for Admin DB Handlers
+        back_to_courses_from_db_handler = CallbackQueryHandler(self._telegram_handlers.back_to_courses_from_db_callback, pattern=r"^back_to_courses$")
+
+        db_conversation_handler = ConversationHandler(
+            entry_points=[add_subject_handler],
+            states={
+                DbControlStates.SUBJECT_PROMPT: [
+                    subject_prompt_handler,
+                ],
+                DbControlStates.SUBJECT_ADDITION: [
+                    subject_addition_handler,
+                ],
+                DbControlStates.SUBJECT_ADDITION_CONFIRMATION: [
+                    subject_addition_confirmation_handler,
+                    back_to_courses_from_db_handler
+                ],
+                DbControlStates.REPEAT_ADD_SUBJECT_CHECK: [
+                    subject_prompt_handler,
+                    back_to_courses_from_db_handler,
+                ]
+            },
+            fallbacks=[cancel_handler],
+            per_user=True,
+            per_chat=False,
+            allow_reentry=True,
+        )
+
+        self._application.add_handler(db_conversation_handler)
+        logger.debug("DB administration conversation handler added")
 
     def run(self) -> None:
         self._application.run_polling()

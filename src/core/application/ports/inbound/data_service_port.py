@@ -6,6 +6,7 @@ from src.core.domain.common.enums import CourseYear
 
 
 class DataServicePort(Protocol):
+    # Get entities
     def get_courses(self) -> list[Course]:
         raise NotImplementedError
 
@@ -25,4 +26,15 @@ class DataServicePort(Protocol):
         raise NotImplementedError
 
     def get_note_url(self, note_id: uuid.UUID) -> str | None:
+        raise NotImplementedError
+
+    # Create/update entities
+    def add_subject(self, course_year: CourseYear, name: str) -> Subject:
+        raise NotImplementedError
+
+    # Delete entities
+    def delete_subject(self, subject_id: uuid.UUID) -> None:
+        raise NotImplementedError
+
+    def delete_note(self, note_id: uuid.UUID) -> None:
         raise NotImplementedError
