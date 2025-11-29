@@ -2,7 +2,7 @@ import logging
 from collections.abc import Generator
 from contextlib import contextmanager
 from time import sleep
-from sqlmodel import create_engine, Session, SQLModel, select
+from sqlmodel import create_engine, Session, SQLModel
 
 from .settings import settings
 # Import of models is needed for SQLModel to generate tables from metadata
