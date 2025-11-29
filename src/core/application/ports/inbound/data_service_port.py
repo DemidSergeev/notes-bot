@@ -1,3 +1,4 @@
+from io import BytesIO
 import uuid
 from typing import Protocol
 
@@ -22,6 +23,9 @@ class DataServicePort(Protocol):
     def get_not_approved_notes(self) -> list[Note]:
         raise NotImplementedError
 
+    def get_note_by_id(self, note_id: uuid.UUID) -> Note | None:
+        raise NotImplementedError
+
     def get_note_file(self, note_id: uuid.UUID) -> str | None:
         raise NotImplementedError
 
@@ -30,6 +34,9 @@ class DataServicePort(Protocol):
 
     # Create/update entities
     def add_subject(self, course_year: CourseYear, name: str) -> Subject:
+        raise NotImplementedError
+
+    def upload_note(self, title: str, subject_id: uuid.UUID, file: BytesIO) -> None:
         raise NotImplementedError
 
     # Delete entities

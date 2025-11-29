@@ -1,6 +1,6 @@
 import logging
 
-from src.core.domain.models import Subject
+from src.core.domain.models import Subject, Note
 from ..ports.inbound import DataServicePort
 from ..ports.outbound.persistence import CourseRepositoryPort, SubjectRepositoryPort, NoteRepositoryPort
 from ..ports.outbound.storage import NoteStoragePort
@@ -20,6 +20,7 @@ class DataService(DataServicePort):
         self._subject_repo = subject_repo
         self._note_repo = note_repo
         self._note_storage = note_storage
+
 
     # Get entities
 
@@ -58,6 +59,14 @@ class DataService(DataServicePort):
 
         return notes
 
+    def get_note_by_id(self, note_id):
+        note = self._note_repo.get_by_id(note_id)
+
+        if not note:
+            raise ValueError(f"Note with id {note_id} does not exist.")
+        
+        return note
+
     def get_note_file(self, note_id):
         note = self._note_repo.get_by_id(note_id)
         
@@ -88,6 +97,7 @@ class DataService(DataServicePort):
 
         return note_url
 
+
     # Create/update entities
 
     def add_subject(self, course_year, name):  
@@ -105,6 +115,16 @@ class DataService(DataServicePort):
         logger.debug("Added subject %s to course year %d", subject.name, course.year.value)
 
         return subject
+
+    def upload_note(self, title, subject_id, file):
+        note = Note(
+            title=title,
+        )
+        file.seek(0)
+        self._note_repo.save(note, subject_id)
+        self._note_storage.save(note, file)
+        logger.debug("Note %s (UUID %s) uploaded", title, note.id)
+
 
     # Delete entities
 
