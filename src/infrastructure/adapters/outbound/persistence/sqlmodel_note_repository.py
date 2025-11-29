@@ -29,7 +29,6 @@ class SqlModelNoteRepository(NoteRepositoryPort):
             return Note(
                 id=db_note.id,
                 title=db_note.title,
-                price_rub=db_note.price_rub,
                 is_approved=db_note.is_approved
             )
 
@@ -46,7 +45,6 @@ class SqlModelNoteRepository(NoteRepositoryPort):
             return Note(
                 id=db_note.id,
                 title=db_note.title,
-                price_rub=db_note.price_rub,
                 is_approved=db_note.is_approved
             )
 
@@ -62,7 +60,6 @@ class SqlModelNoteRepository(NoteRepositoryPort):
                 Note(
                     id=db_note.id,
                     title=db_note.title,
-                    price_rub=db_note.price_rub,
                     is_approved=db_note.is_approved
                 )
                 for db_note in db_notes
@@ -80,7 +77,6 @@ class SqlModelNoteRepository(NoteRepositoryPort):
                 Note(
                     id=db_note.id,
                     title=db_note.title,
-                    price_rub=db_note.price_rub,
                     is_approved=db_note.is_approved
                 )
                 for db_note in db_notes
@@ -94,7 +90,6 @@ class SqlModelNoteRepository(NoteRepositoryPort):
             if db_note:
                 db_note.id = note.id
                 db_note.title = note.title
-                db_note.price_rub = note.price_rub
                 db_note.is_approved = note.is_approved
                 if subject_id:
                     db_note.subject_id = subject_id
@@ -103,7 +98,6 @@ class SqlModelNoteRepository(NoteRepositoryPort):
                 db_note = DbNote(
                     id=note.id,
                     title=note.title,
-                    price_rub=note.price_rub,
                     is_approved=note.is_approved,
                     subject_id=subject_id
                 )

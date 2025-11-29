@@ -23,7 +23,7 @@ class Application:
         list_courses_handler = CallbackQueryHandler(self._telegram_handlers.list_courses_callback, pattern=r"^(buy|sell)$")
         list_subjects_handler = CallbackQueryHandler(self._telegram_handlers.list_subjects_callback, pattern=r"^course/\d+$")
         list_approved_notes_handler = CallbackQueryHandler(self._telegram_handlers.list_approved_notes_callback, pattern=fr"^subject/{regex_uuid}$")
-        buy_note_handler = CallbackQueryHandler(self._telegram_handlers.buy_note_callback, pattern=fr"^note/{regex_uuid}$")
+        download_note_handler = CallbackQueryHandler(self._telegram_handlers.download_note_callback, pattern=fr"^note/{regex_uuid}$")
         prompt_upload_note_handler = CallbackQueryHandler(self._telegram_handlers.prompt_upload_note_callback, pattern=fr"^subject/{regex_uuid}$")
 
         upload_note_handler = MessageHandler(filters.Document.ALL, self._telegram_handlers.upload_note_handler)
@@ -51,8 +51,8 @@ class Application:
                     list_approved_notes_handler,
                     back_to_courses_handler
                 ],
-                UserStates.PURCHASE_CONFIRMATION: [
-                    buy_note_handler,
+                UserStates.NOTE_DOWNLOAD: [
+                    download_note_handler,
                     back_to_subjects_handler
                 ],
                 UserStates.NOTE_UPLOAD_PROMPT: [

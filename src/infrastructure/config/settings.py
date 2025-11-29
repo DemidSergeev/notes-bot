@@ -45,8 +45,6 @@ class Settings(BaseSettings):
                 return f.read()
         return "Этот бот позволяет покупать и продавать конспекты лекций между студентами."
 
-    PAYMENT_DETAILS: str = "6666 6666 6666 6666"
-
     @computed_field
     @property
     def LOG_DIR(self) -> str:

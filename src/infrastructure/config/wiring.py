@@ -1,9 +1,8 @@
 import logging
 
-from src.core.application.services import PurchaseService, DataService, SellService, ReviewService
-from src.infrastructure.adapters.outbound.persistence import SqlModelCourseRepository, SqlModelSubjectRepository, SqlModelNoteRepository, SqlModelPurchaseReceiptRepository
+from src.core.application.services import DataService, ReviewService
+from src.infrastructure.adapters.outbound.persistence import SqlModelCourseRepository, SqlModelSubjectRepository, SqlModelNoteRepository
 from src.infrastructure.adapters.outbound.storage import MinioNoteStorage
-from src.infrastructure.adapters.outbound.payment_details_provider import ConfigPaymentDetailsProvider
 from src.infrastructure.adapters.inbound.telegram import TelegramHandlers
 from src.infrastructure.adapters.inbound.telegram import Application
 from src.infrastructure.config.database import get_session
@@ -16,7 +15,6 @@ logger = logging.getLogger(__name__)
 note_repo = SqlModelNoteRepository(session_factory=get_session)
 subject_repo = SqlModelSubjectRepository(session_factory=get_session, note_repository=note_repo)
 course_repo = SqlModelCourseRepository(session_factory=get_session, subject_repository=subject_repo)
-purchase_receipt_repo = SqlModelPurchaseReceiptRepository(session_factory=get_session)
 
 note_storage = MinioNoteStorage(client=get_client(), bucket=settings.MINIO_BUCKET, url_signer_client=get_url_signer_client())
 
@@ -25,17 +23,6 @@ logger.debug("Repositories and storage wiring complete")
 data_service = DataService(
     course_repo=course_repo,
     subject_repo=subject_repo,
-    note_repo=note_repo,
-    note_storage=note_storage
-)
-
-purchase_service = PurchaseService(
-    note_repo=note_repo,
-    purchase_receipt_repo=purchase_receipt_repo,
-    payment_details_provider=ConfigPaymentDetailsProvider(),
-)
-
-sell_service = SellService(
     note_repo=note_repo,
     note_storage=note_storage
 )
@@ -49,8 +36,6 @@ logger.debug("Services wiring complete")
 
 telegram_handlers = TelegramHandlers(
     data_service=data_service,
-    purchase_service=purchase_service,
-    sell_service=sell_service,
     review_service=review_service,
     welcome_message="Добро пожаловать в бот по покупке конспектов!",
     admin_ids=settings.TELEGRAM_ADMIN_IDS,

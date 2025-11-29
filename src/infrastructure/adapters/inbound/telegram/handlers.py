@@ -1,4 +1,3 @@
-import random
 import logging
 import io
 import uuid
@@ -8,7 +7,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes, ConversationHandler
 from telegram.constants import ParseMode
 
-from src.core.application.ports.inbound import DataServicePort, PurchaseServicePort, SellServicePort, ReviewServicePort
+from src.core.application.ports.inbound import DataServicePort, ReviewServicePort
 from src.core.domain.models import User
 from src.core.domain.common.enums import StartActions, CourseYear
 
@@ -21,7 +20,7 @@ class UserStates(Enum):
     COURSE_SELECTION = 2
     SUBJECT_SELECTION = 3
     NOTE_SELECTION = 4
-    PURCHASE_CONFIRMATION = 5
+    NOTE_DOWNLOAD = 5
     NOTE_UPLOAD_PROMPT = 6
     NOTE_UPLOAD = 7
 
@@ -41,20 +40,17 @@ class TelegramHandlers:
     def __init__(
         self,
         data_service: DataServicePort,
-        purchase_service: PurchaseServicePort,
-        sell_service: SellServicePort,
         review_service: ReviewServicePort,
         welcome_message: str,
         admin_ids: list[int],
         about_us_message: str
         ) -> None:
         self._data_service = data_service
-        self._purchase_service = purchase_service
-        self._sell_service = sell_service
         self._review_service = review_service
         self._welcome_message = welcome_message
         self._admin_ids = admin_ids
         self._about_us_message = about_us_message
+
 
     # --- HELPER METHODS FOR RENDERING MENUS ---
 
@@ -114,6 +110,7 @@ class TelegramHandlers:
             reply_markup=InlineKeyboardMarkup(buttons)
         )
 
+
     # --- START & CANCEL HANDLERS ---
 
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -124,6 +121,7 @@ class TelegramHandlers:
     async def cancel_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text("Состояние сброшено. Начинаю заново.")
         return await self.start_command(update, context)
+
 
     # --- BACK NAVIGATION HANDLERS ---
 
@@ -159,6 +157,7 @@ class TelegramHandlers:
             case _:
                 # Fallback
                 return UserStates.SUBJECT_SELECTION
+
 
     # --- MAIN FLOW HANDLERS ---
 
@@ -240,9 +239,9 @@ class TelegramHandlers:
 
         await query.message.edit_text(reply if len(buttons) > 1 else "Конспекты по этому предмету ещё не добавили :(", reply_markup=InlineKeyboardMarkup(buttons))
 
-        return UserStates.PURCHASE_CONFIRMATION
+        return UserStates.NOTE_DOWNLOAD
 
-    async def buy_note_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    async def download_note_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         query = update.callback_query
         await query.answer()
 
@@ -253,22 +252,20 @@ class TelegramHandlers:
         note_id = data_parts[1]
         context.user_data["note_id"] = uuid.UUID(note_id)
 
-        user = update.effective_user
-        buyer = User(external_id=user.id, name=user.full_name)
-
-        receipt = self._purchase_service.generate_purchase_receipt(note_id=note_id, buyer=buyer)
+        note_title = html.escape(self._data_service.get_note_by_id(note_id).title)
+        note_url = self._data_service.get_note_url(note_id)
 
         # Here we provide a button to go back to the note list if they change their mind, 
         # or we could end the conversation. 
         buttons = [[InlineKeyboardButton(text="« Назад к конспектам", callback_data="back_to_subjects")]]
 
         await query.message.edit_text(
-            f"Создана заявка на покупку конспекта.\nРеквизиты для оплаты конспекта: {receipt.payment_details}",
+            f'Ссылка на конспект: <a href="{note_url}">{note_title}</a>', parse_mode=ParseMode.HTML,
             reply_markup=InlineKeyboardMarkup(buttons)
         )
         
-        # We stay in PURCHASE_CONFIRMATION to allow the back button to work
-        return UserStates.PURCHASE_CONFIRMATION 
+        # We stay in NOTE_DOWNLOAD to allow the back button to work
+        return UserStates.NOTE_DOWNLOAD 
 
     async def prompt_upload_note_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         query = update.callback_query
@@ -300,9 +297,8 @@ class TelegramHandlers:
             file_handler = await bot.get_file(document.file_id)
             file = io.BytesIO()
             await file_handler.download_to_memory(file)
-            self._sell_service.upload_note(
+            self._data_service.upload_note(
                 title=document.file_name,
-                price_rub=random.randint(50, 300),
                 subject_id=subject_id,
                 file=file,
             )
@@ -320,6 +316,7 @@ class TelegramHandlers:
             logger.exception("Error uploading note")
             await update.message.reply_text("Произошла ошибка при загрузке. Попробуйте ещё раз.")
             return UserStates.NOTE_UPLOAD
+
 
     # --- REVIEW HANDLERS ---
 
