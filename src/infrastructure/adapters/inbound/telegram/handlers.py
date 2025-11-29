@@ -17,12 +17,13 @@ logger = logging.getLogger(__name__)
 
 class UserStates(Enum):
     END = ConversationHandler.END
-    COURSE_SELECTION = 1
-    SUBJECT_SELECTION = 2
-    NOTE_SELECTION = 3
-    PURCHASE_CONFIRMATION = 4
-    NOTE_UPLOAD_PROMPT = 5
-    NOTE_UPLOAD = 6
+    PURPOSE_ROUTER = 1
+    COURSE_SELECTION = 2
+    SUBJECT_SELECTION = 3
+    NOTE_SELECTION = 4
+    PURCHASE_CONFIRMATION = 5
+    NOTE_UPLOAD_PROMPT = 6
+    NOTE_UPLOAD = 7
 
 class ReviewStates(Enum):
     END = ConversationHandler.END
@@ -38,6 +39,7 @@ class TelegramHandlers:
         review_service: ReviewServicePort,
         welcome_message: str,
         admin_ids: list[int],
+        about_us_message: str
         ) -> None:
         self._data_service = data_service
         self._purchase_service = purchase_service
@@ -45,6 +47,7 @@ class TelegramHandlers:
         self._review_service = review_service
         self._welcome_message = welcome_message
         self._admin_ids = admin_ids
+        self._about_us_message = about_us_message
 
     # --- HELPER METHODS FOR RENDERING MENUS ---
 
@@ -57,8 +60,11 @@ class TelegramHandlers:
 
         if is_edit and update.callback_query:
             await update.callback_query.message.edit_text(self._welcome_message, reply_markup=keyboard)
-        else:
+        elif update.message:
             await update.message.reply_text(self._welcome_message, reply_markup=keyboard)
+        else:
+            logger.error("Cannot render start menu: no message or callback_query available.")
+            
 
     async def _render_courses_menu(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         courses = self._data_service.get_courses()
@@ -104,13 +110,11 @@ class TelegramHandlers:
     async def start_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         context.user_data.clear()
         await self._render_start_menu(update, context, is_edit=False)
-        return UserStates.COURSE_SELECTION
+        return UserStates.PURPOSE_ROUTER
 
     async def cancel_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await update.message.reply_text("Состояние сброшено. Начинаю заново.")
-        context.user_data.clear()
-        await self._render_start_menu(update, context, is_edit=False)
-        return UserStates.COURSE_SELECTION
+        return await self.start_command(update, context)
 
     # --- BACK NAVIGATION HANDLERS ---
 
@@ -119,7 +123,7 @@ class TelegramHandlers:
         await query.answer()
         context.user_data.pop("purpose", None)
         await self._render_start_menu(update, context, is_edit=True)
-        return UserStates.COURSE_SELECTION
+        return UserStates.PURPOSE_ROUTER
 
     async def back_to_courses_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         query = update.callback_query
@@ -148,6 +152,27 @@ class TelegramHandlers:
                 return UserStates.SUBJECT_SELECTION
 
     # --- MAIN FLOW HANDLERS ---
+
+    async def purpose_router_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+        query = update.callback_query
+        await query.answer()
+
+        purpose = query.data
+        match purpose:
+            case StartActions.BUY.value.code | StartActions.SELL.value.code:
+                context.user_data["purpose"] = purpose
+                logger.debug("User %s (ID %s) selecting courses for purpose '%s'", update.effective_user.full_name, update.effective_user.id, purpose)
+
+                await self._render_courses_menu(update, context)
+                return UserStates.SUBJECT_SELECTION
+            case StartActions.ABOUT.value.code:
+                logger.debug("User %s (ID %s) requested 'About us' information", update.effective_user.full_name, update.effective_user.id)
+
+                buttons = [[InlineKeyboardButton(text="« Назад", callback_data="back_to_start")]]
+                keyboard = InlineKeyboardMarkup(buttons)
+                
+                await query.message.edit_text(self._about_us_message, reply_markup=keyboard, parse_mode=ParseMode.MARKDOWN_V2)
+                return UserStates.PURPOSE_ROUTER
 
     async def list_courses_callback(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         query = update.callback_query

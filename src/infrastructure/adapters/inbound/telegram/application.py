@@ -19,6 +19,7 @@ class Application:
         cancel_handler = CommandHandler("cancel", self._telegram_handlers.cancel_command)
 
         # Forward Navigation
+        purpose_router_handler = CallbackQueryHandler(self._telegram_handlers.purpose_router_callback, pattern=r"^(buy|sell|about)$")
         list_courses_handler = CallbackQueryHandler(self._telegram_handlers.list_courses_callback, pattern=r"^(buy|sell)$")
         list_subjects_handler = CallbackQueryHandler(self._telegram_handlers.list_subjects_callback, pattern=r"^course/\d+$")
         list_approved_notes_handler = CallbackQueryHandler(self._telegram_handlers.list_approved_notes_callback, pattern=fr"^subject/{regex_uuid}$")
@@ -35,6 +36,10 @@ class Application:
         user_conversation_handler = ConversationHandler(
             entry_points=[start_handler],
             states={
+                UserStates.PURPOSE_ROUTER: [
+                    purpose_router_handler,
+                    back_to_start_handler
+                ],
                 UserStates.COURSE_SELECTION: [
                     list_courses_handler
                 ],

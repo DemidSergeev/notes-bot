@@ -38,12 +38,12 @@ class Settings(BaseSettings):
 
     @computed_field
     @property
-    def TELEGRAM_WELCOME_MESSAGE(self) -> str:
-        welcome_message_file_path = pathlib.Path(__file__).parent.parent.parent / "assets" / "welcome.txt"
-        if welcome_message_file_path.exists():
-            with open(welcome_message_file_path) as f:
+    def TELEGRAM_ABOUT_MESSAGE(self) -> str:
+        about_message_file_path = pathlib.Path(__file__).parent.parent.parent.parent / "assets" / "about.txt"
+        if about_message_file_path.exists():
+            with open(about_message_file_path) as f:
                 return f.read()
-        return "Welcome to the Notes Bot!"
+        return "Этот бот позволяет покупать и продавать конспекты лекций между студентами."
 
     PAYMENT_DETAILS: str = "6666 6666 6666 6666"
 
