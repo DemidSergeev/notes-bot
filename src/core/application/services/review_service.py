@@ -25,7 +25,7 @@ class ReviewService(ReviewServicePort):
         self.note_repo.save(note, subject_id=None)  # subject_id is not updated
         logging.debug("Note %s (UUID %s) approved", note.title, note.id)
 
-    def reject_note(self, uploader_user_id, note_id, reason: str) -> None:
+    def reject_note(self, note_id, reason: str) -> None:
         note = self.note_repo.get_by_id(note_id)
         if not note:
             raise ValueError(f"Note with id {note_id} does not exist.")

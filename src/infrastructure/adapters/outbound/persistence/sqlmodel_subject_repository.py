@@ -90,7 +90,6 @@ class SqlModelSubjectRepository(SubjectRepositoryPort):
             Note(
                 id=db_note.id,
                 title=db_note.title,
-                price_rub=db_note.price_rub
             )
             for db_note in db_subject.notes
         ]
